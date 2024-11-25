@@ -14,7 +14,7 @@ GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # List of specific words for custom response
-trigger_words = ['hello', 'kaha se ho', 'bolo', 'suno']
+trigger_words = ['add','bsdk','bak','baak','aao','kya','thanks','/repo','gemini','/gemini','/chatgpt','chatgpt','ai','/ai','wow','hii','hi','/start','hello', 'kaha se ho', 'bolo', 'suno']
 
 async def ask_gemini(question):
     # Use the generative model from Google Gemini
@@ -34,7 +34,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check if the message contains any of the trigger words
     if any(trigger_word in user_message for trigger_word in trigger_words):
-        reply = "Hey, I am a Google Assistant trained by Baby Music Team"
+        reply = "Hey, I am a Google Assistant trained by Baby Music Team, now tell me how can i help you"
     else:
         # Add a short delay to simulate thinking time
         await asyncio.sleep(0.5)  # Adjust the delay as needed
