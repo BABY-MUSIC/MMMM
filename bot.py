@@ -16,13 +16,12 @@ from telegram.ext import (
 
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
 # Telegram Bot Token
-TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo" 
+TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo"
 
 # Gemini API Key
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"  # Replace with your actual Gemini API key
@@ -104,11 +103,17 @@ async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.info(f"MongoDB insertion result: {result.acknowledged}")
 
             await update.message.reply_text(f"User {username} has been approved!")
+
         except error.TelegramError as e:
-            logger.error(f"Error getting user chat: {e}")
-            await update.message.reply_text(
-                "Error getting user information. Please check the username.")
-            return
+            if e.message == "Chat not found":
+                await update.message.reply_text(
+                    f"Error: User '{username}' not found. Please check the username and ensure the bot has access to it."
+                )
+            else:
+                logger.error(f"Error getting user chat: {e}")
+                await update.message.reply_text(
+                    "An unexpected error occurred while fetching user information."
+                )
 
     except IndexError:
         await update.message.reply_text(
@@ -159,8 +164,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply = await ask_gemini(user_message)
 
     # Combine typing action and response
-    await update.message.reply_text(f"_{reply}_",
-                                    parse_mode=ParseMode.MARKDOWN)
+    await update.message.reply_text(f"_{reply}_", parse_mode=ParseMode.MARKDOWN)
 
 
 def main():
