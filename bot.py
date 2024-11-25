@@ -48,7 +48,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_member:
         # If the user is not a member, ask them to join the channel
         await update.message.reply_text(
-            f"Please join the channel {CHANNEL_USERNAME} to use the bot:",
+            f"Please join the channel @{CHANNEL_USERNAME} to use the bot:",
             parse_mode=ParseMode.HTML  # Change to HTML mode to avoid Markdown issues
         )
         return
