@@ -1,6 +1,6 @@
 import google.generativeai as genai
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 import asyncio
 
 # Telegram Bot Token
@@ -21,30 +21,28 @@ async def ask_gemini(question):
     return response.text if response.text else "Sorry, no response."
 
 
-async def gemini_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.args:
-        question = " ".join(context.args)
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Get the user's message text
+    user_message = update.message.text
 
-        # Simulate the typing action on Telegram (bot is typing)
-        await update.message.chat.send_action(action="typing")
+    # Simulate the typing action on Telegram (bot is typing)
+    await update.message.chat.send_action(action="typing")
 
-        # Add a short delay to simulate thinking time
-        await asyncio.sleep(0.5)  # Adjust the delay as needed
+    # Add a short delay to simulate thinking time
+    await asyncio.sleep(0.5)  # Adjust the delay as needed
 
-        # Get response from Gemini model
-        reply = await ask_gemini(question)
+    # Get response from Gemini model
+    reply = await ask_gemini(user_message)
 
-        # Send the reply
-        await update.message.reply_text(reply)
-    else:
-        await update.message.reply_text("Please ask a question after /gemini command.")
+    # Send the reply
+    await update.message.reply_text(reply)
 
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Command handler for /gemini
-    application.add_handler(CommandHandler("gemini", gemini_command))
+    # Message handler for all text messages (no need for /gemini)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Start the bot
     print("Bot is running...")
