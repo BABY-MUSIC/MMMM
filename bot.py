@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from telegram import Update
+from telegram import Update, ChatAction
 from telegram.constants import ParseMode
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 import asyncio
@@ -11,19 +11,19 @@ TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 
 # Channel Link
-CHANNEL_USERNAME = "@BABY09_WORLD"  # Make sure the username has '@'
+CHANNEL_USERNAME = "@BABY09_WORLD"  # Ensure this starts with '@'
 
 # Configure the Gemini API with the API Key
 genai.configure(api_key=GEMINI_API_KEY)
 
 async def ask_gemini(question):
-    # Use the generative model from Google Gemini
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(question)
-    
-    # Return the response text
-    return response.text if response.text else "Sorry, no response."
-
+    try:
+        response = genai.generate_text(prompt=question)
+        # Return the first generated response
+        return response.candidates[0]['content'] if response.candidates else "Sorry, no response."
+    except Exception as e:
+        print(f"Error in Gemini API call: {e}")
+        return "Sorry, I couldn't process your request."
 
 async def check_user_in_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -36,16 +36,13 @@ async def check_user_in_channel(update: Update, context: ContextTypes.DEFAULT_TY
         # Log the error for debugging
         print(f"Error checking user in channel: {e}")
         
-        # Handle specific errors
+        # Provide user-friendly debug messages
         if "chat not found" in str(e).lower():
             print("Bot might not be added to the channel or the username is incorrect.")
         elif "user not found" in str(e).lower():
             print("The user may not exist or privacy settings might block access.")
         else:
             print("An unexpected error occurred.")
-        
-        # Return False if any issue occurs
-        return False
     return False
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -55,38 +52,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_member:
         # If the user is not a member, ask them to join the channel
         await update.message.reply_text(
-            f"Please join the channel @BABY09_WORLD to use the bot.",
-            parse_mode=ParseMode.HTML  # Change to HTML mode to avoid Markdown issues
+            f"Please join the channel {CHANNEL_USERNAME} to use the bot.",
+            parse_mode=ParseMode.HTML  # Use HTML parsing
         )
         return
 
     # If the user is a member, proceed with the bot's logic
-    user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
+    user_message = update.message.text.lower()  # Convert to lowercase for case-insensitivity
 
-    # Simulate typing action on Telegram (bot is typing)
-    await update.message.chat.send_action(action="typing")
+    # Simulate typing action on Telegram
+    await context.bot.send_chat_action(chat_id=update.message.chat_id, action=ChatAction.TYPING)
 
-    
-        # Add a short delay to simulate thinking time
-        await asyncio.sleep(0.5)  # Adjust the delay as needed
+    # Add a short delay to simulate thinking time
+    await asyncio.sleep(0.5)  # Adjust the delay as needed
 
-        # Get response from Gemini model
-        reply = await ask_gemini(user_message)
+    # Get response from Gemini model
+    reply = await ask_gemini(user_message)
 
     # Send the reply with Markdown parsing enabled
     await update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
-
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Message handler for all text messages (no need for /gemini)
+    # Message handler for all text messages
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Start the bot
     print("Bot is running...")
     application.run_polling()
-
 
 if __name__ == "__main__":
     main()
