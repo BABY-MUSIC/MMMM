@@ -5,7 +5,7 @@ from typing import Dict
 import google.generativeai as genai
 from pymongo import MongoClient
 from telegram import Update, error
-from telegram.constants import ParseMode
+from telegram.constants import ParseMode, ChatAction
 from telegram.ext import (
     Application,
     MessageHandler,
