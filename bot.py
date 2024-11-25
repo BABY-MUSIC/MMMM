@@ -56,10 +56,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
 
     # Simulate typing action on Telegram (bot is typing)
-    await update.message.chat.send_action(action="typing"
+    await update.message.chat.send_action(action="typing") 
 
-        # Get response from Gemini model
-        reply = await ask_gemini(user_message)
+    # Get response from Gemini model
+    reply = await ask_gemini(user_message)
 
     # Send the reply with Markdown parsing enabled
     await update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
