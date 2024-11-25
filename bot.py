@@ -1,5 +1,6 @@
 import requests
-from telegram.ext import Updater, CommandHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Telegram Bot Token
 TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
@@ -11,7 +12,7 @@ GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
 
 
-def ask_gemini(question):
+async def ask_gemini(question):
     headers = {"Content-Type": "application/json"}
     data = {
         "contents": [
@@ -32,26 +33,24 @@ def ask_gemini(question):
         return "Error: Could not connect to Gemini API."
 
 
-def gemini_command(update, context):
-    if len(context.args) > 0:
+async def gemini_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.args:
         question = " ".join(context.args)
-        reply = ask_gemini(question)
-        update.message.reply_text(reply)
+        reply = await ask_gemini(question)
+        await update.message.reply_text(reply)
     else:
-        update.message.reply_text("Please ask a question after /gemini command.")
+        await update.message.reply_text("Please ask a question after /gemini command.")
 
 
 def main():
-    updater = Updater(TELEGRAM_TOKEN, use_context=True)
-    dispatcher = updater.dispatcher
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Command handler for /gemini
-    dispatcher.add_handler(CommandHandler("gemini", gemini_command))
+    application.add_handler(CommandHandler("gemini", gemini_command))
 
     # Start the bot
-    updater.start_polling()
     print("Bot is running...")
-    updater.idle()
+    application.run_polling()
 
 
 if __name__ == "__main__":
