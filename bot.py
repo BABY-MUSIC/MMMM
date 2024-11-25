@@ -254,7 +254,7 @@ async def approved_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mentions = ""
     count = 1
     for user in approved_users:
-        mentions += f"{count}. @{user['username']} \n"
+        mentions += f"{count}. {user['username']} \n"
         count += 1
     
     # If no approved users found
