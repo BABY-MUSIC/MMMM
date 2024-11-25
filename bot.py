@@ -12,6 +12,9 @@ GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 # Configure the Gemini API with the API Key
 genai.configure(api_key=GEMINI_API_KEY)
 
+# List of specific words for custom response
+trigger_words = ['hello', 'kaha se ho', 'bolo', 'suno']
+
 async def ask_gemini(question):
     # Use the generative model from Google Gemini
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -23,16 +26,20 @@ async def ask_gemini(question):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the user's message text
-    user_message = update.message.text
+    user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
 
-    # Simulate the typing action on Telegram (bot is typing)
-    await update.message.chat.send_action(action="typing")
+    # Check if the message contains any of the trigger words
+    if any(trigger_word in user_message for trigger_word in trigger_words):
+        reply = "Hey, I am a Google Assistant trained by Baby Music Team"
+    else:
+        # Simulate the typing action on Telegram (bot is typing)
+        await update.message.chat.send_action(action="typing")
 
-    # Add a short delay to simulate thinking time
-    await asyncio.sleep(0.5)  # Adjust the delay as needed
+        # Add a short delay to simulate thinking time
+        await asyncio.sleep(0.5)  # Adjust the delay as needed
 
-    # Get response from Gemini model
-    reply = await ask_gemini(user_message)
+        # Get response from Gemini model
+        reply = await ask_gemini(user_message)
 
     # Send the reply
     await update.message.reply_text(reply)
