@@ -69,6 +69,9 @@ async def ask_gemini(question):
 
 async def is_authorized(user_id: int):
     """Checks if a user is authorized to use the bot."""
+    # Automatically authorize the owner
+    if user_id == OWNER_ID:
+        return True
     user = authorized_users_collection.find_one({"user_id": user_id})
     return user is not None
 
