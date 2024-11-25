@@ -222,21 +222,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Combine typing action and response
     await update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /start command."""
+    try:
+        # Send a welcome message
+        await update.message.reply_text("Hey! I am your AI assistant. How can I help you today?")
+    except Exception as e:
+        logger.error(f"Error in /start command: {e}")
+
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add command handlers
+    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("approve", approve_user))
     application.add_handler(CommandHandler("disapprove", disapprove_user))
 
     # Message handler for all text messages
     application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
+    )
 
     # Start the bot
-    print("Bot is running...")
+    logger.info("Bot is running...")
     application.run_polling()
-
 
 if __name__ == "__main__":
     main()
