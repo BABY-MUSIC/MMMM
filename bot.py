@@ -202,7 +202,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not authorized:
         await update.message.reply_text(
-            "You are not authorized to use this bot. Please contact the bot owner for approval."
+            "You are not authorized to use this bot. Please contact @UTTAM470 for authorize."
         )
         return
 
@@ -234,7 +234,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         # Send a welcome message with the button
         await update.message.reply_text(
-            "Hey! I am your AI assistant. How can I help you today?",
+            "Hey! I am team baby AI. How can I help you today? ask me any query",
             reply_markup=join_button
         )
     except Exception as e:
