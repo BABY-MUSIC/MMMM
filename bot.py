@@ -14,6 +14,32 @@ from telegram.ext import (
     CommandHandler,
 )
 
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /start command."""
+    welcome_message = (
+        "Welcome to the bot! 🤖\n\n"
+        "Here's what you can do:\n"
+        "- Send a message to get a response from AI.\n"
+        "- If you're not authorized, contact the bot owner for approval.\n"
+        "- Ensure you're a member of our channel to use this bot.\n\n"
+        "Enjoy your experience!"
+    )
+    await update.message.reply_text(welcome_message)
+
+def main():
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # Add command handlers
+    application.add_handler(CommandHandler("start", start))  # Start command
+    application.add_handler(CommandHandler("approve", approve_user))
+    application.add_handler(CommandHandler("disapprove", disapprove_user))
+
+    # Message handler for all text messages
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
+    )
+
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
