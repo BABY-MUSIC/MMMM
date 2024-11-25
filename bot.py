@@ -16,9 +16,6 @@ CHANNEL_USERNAME = "@BABY09_WORLD"  # Make sure the username has '@'
 # Configure the Gemini API with the API Key
 genai.configure(api_key=GEMINI_API_KEY)
 
-# List of specific words for custom response
-trigger_words = ['tum kon ho','who are you','add','bsdk','bak','baak','aao','kya','thanks','/repo','gemini','/gemini','/chatgpt','chatgpt','ai','/ai','wow','hii','hi','/start','hello', 'kaha se ho', 'bolo', 'suno']
-
 async def ask_gemini(question):
     # Use the generative model from Google Gemini
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -69,10 +66,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Simulate typing action on Telegram (bot is typing)
     await update.message.chat.send_action(action="typing")
 
-    # Check if the message contains any of the trigger words
-    if any(trigger_word in user_message for trigger_word in trigger_words):
-        reply = "Hey, I am a Google Assistant trained by Baby Music Team, now tell me how can I help you?"
-    else:
+    
         # Add a short delay to simulate thinking time
         await asyncio.sleep(0.5)  # Adjust the delay as needed
 
