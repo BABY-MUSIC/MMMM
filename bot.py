@@ -42,5 +42,6 @@ def main():
     updater.start_polling()
     updater.idle()
 
-if name == "main":
+# Ensure this script runs only when executed directly
+if __name__ == "__main__":
     main()
