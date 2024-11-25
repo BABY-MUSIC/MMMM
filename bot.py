@@ -10,6 +10,9 @@ TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
 # Gemini API Key
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 
+# Channel Link
+CHANNEL_USERNAME = "BABY09_WORLD"  # The username of the channel
+
 # Configure the Gemini API with the API Key
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -25,8 +28,32 @@ async def ask_gemini(question):
     return response.text if response.text else "Sorry, no response."
 
 
+async def check_user_in_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    try:
+        # Get the chat member status for the user in the channel
+        chat_member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        if chat_member.status in ['member', 'administrator', 'creator']:
+            return True
+    except Exception as e:
+        # If there's an error (e.g., the user is not a member)
+        print(f"Error checking user in channel: {e}")
+        return False
+    return False
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Get the user's message text
+    # Check if the user is a member of the channel
+    is_member = await check_user_in_channel(update, context)
+
+    if not is_member:
+        # If the user is not a member, ask them to join the channel
+        await update.message.reply_text(
+            f"Please join the channel to use the bot: @{CHANNEL_USERNAME}",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    # If the user is a member, proceed with the bot's logic
     user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
 
     # Simulate typing action on Telegram (bot is typing)
