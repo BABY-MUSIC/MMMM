@@ -15,6 +15,10 @@ genai.configure(api_key=GEMINI_API_KEY)
 # List of specific words for custom response
 trigger_words = ['hello', 'kaha se ho', 'bolo', 'suno']
 
+# Function to escape MarkdownV2 special characters
+def escape_markdown_v2(text: str) -> str:
+    return text.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[").replace("]", "\\]").replace("(", "\\(").replace(")", "\\)").replace("~", "\\~").replace(">", "\\>").replace("#", "\\#").replace("+", "\\+").replace("-", "\\-").replace("=", "\\=").replace("|", "\\|").replace("{", "\\{").replace("}", "\\}").replace(".", "\\.").replace("!", "\\!")
+
 async def ask_gemini(question):
     # Use the generative model from Google Gemini
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -41,8 +45,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get response from Gemini model
         reply = await ask_gemini(user_message)
 
-    # Send the reply
-    await update.message.reply_text(reply)
+    # Apply bold formatting (for example, make 'Patna' bold)
+    reply = reply.replace("Patna", "**Patna**")  # Example of making a word bold
+
+    # Escape any special characters for MarkdownV2
+    reply = escape_markdown_v2(reply)
+
+    # Send the reply with MarkdownV2 formatting
+    await update.message.reply_text(reply, parse_mode="MarkdownV2")
 
 
 def main():
