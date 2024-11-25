@@ -63,8 +63,8 @@ async def ask_gemini(question):
 
     # Store the response in the cache (optional)
     response_cache[question] = reply
-    return reply 
     parse_mode=ParseMode.MARKDOWN
+    return reply
 
 
 async def is_authorized(user_id: int):
