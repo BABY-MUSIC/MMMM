@@ -240,6 +240,34 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Error in /start command: {e}")
 
+async def approved_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /approved command to list all approved users in numbered format."""
+    # Check if the sender is the owner
+    if update.effective_user.id != OWNER_ID:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+    
+    # Fetch all approved users from the MongoDB collection
+    approved_users = authorized_users_collection.find()
+    
+    # Prepare the message with numbered list
+    mentions = ""
+    count = 1
+    for user in approved_users:
+        mentions += f"{count}. @{user['username']} \n"
+        count += 1
+    
+    # If no approved users found
+    if not mentions:
+        await update.message.reply_text("No approved users found.")
+        return
+
+    # Send the list of approved users in numbered format
+    await update.message.reply_text(
+        f"List of approved users:\n\n{mentions}",
+        parse_mode=ParseMode.MARKDOWN
+    )
+
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
@@ -247,6 +275,7 @@ def main():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("approve", approve_user))
     application.add_handler(CommandHandler("disapprove", disapprove_user))
+    application.add_handler(CommandHandler("approved", approved_users))  # Add the /approved handler
 
     # Message handler for all text messages
     application.add_handler(
