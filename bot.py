@@ -1,24 +1,46 @@
 import os
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import google.generativeai as genai
 from io import BytesIO
 
 # Configure Google Generative AI
-api_key = os.getenv('API_KEY', 'AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY')
-genai.configure(api_key=api_key)
-imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
+genai.configure(api_key=os.getenv('API_KEY', '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'))
+
+def get_image_generation_model():
+    """Retrieve an image generation model from the available list of models."""
+    try:
+        models = genai.list_models()
+        for model in models:
+            if "image" in model.name.lower():
+                print(f"Selected Model: {model.name}")
+                return model.name
+        print("No suitable image generation model found.")
+        return None
+    except Exception as e:
+        print(f"Error retrieving models: {e}")
+        return None
+
+# Dynamically select an image generation model
+MODEL_NAME = get_image_generation_model()
 
 # Define the start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome! Send me a text prompt, and I will generate an image for you."
+        "Welcome! Send me a text prompt, and I will generate an image for you (if supported)."
     )
 
 # Define the image generation handler
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not MODEL_NAME:
+        await update.message.reply_text("No suitable image generation model is available.")
+        return
+
     prompt = update.message.text
     try:
+        # Initialize the model dynamically
+        imagen = genai.ImageGenerationModel(MODEL_NAME)
+
         # Generate images
         result = imagen.generate_images(
             prompt=prompt,
@@ -40,6 +62,7 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Main function to run the bot
 def main():
     telegram_token = os.getenv('TELEGRAM_BOT_TOKEN', '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo')
+
     application = ApplicationBuilder().token(telegram_token).build()
 
     # Add handlers
@@ -47,6 +70,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, generate_image))
 
     # Start the bot
+    print("Bot is running...")
     application.run_polling()
 
 if __name__ == "__main__":
