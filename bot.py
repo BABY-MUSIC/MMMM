@@ -86,6 +86,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Enjoy your experience!"
     )
     await update.message.reply_text(welcome_message)
+    def main():
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # Add command handlers
+    application.add_handler(CommandHandler("start", start))  # Start command
+    application.add_handler(CommandHandler("approve", approve_user))
+    application.add_handler(CommandHandler("disapprove", disapprove_user))
+
+    # Message handler for all text messages
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
+    )
+
+    
 
 async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Approves a user to use the bot."""
