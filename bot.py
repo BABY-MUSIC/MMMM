@@ -29,7 +29,7 @@ async def gemini_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.chat.send_action(action="typing")
 
         # Add a short delay to simulate thinking time
-        await asyncio.sleep(2)  # Adjust the delay as needed
+        await asyncio.sleep(0.5)  # Adjust the delay as needed
 
         # Get response from Gemini model
         reply = await ask_gemini(question)
