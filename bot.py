@@ -4,7 +4,7 @@ from typing import Dict
 
 import google.generativeai as genai
 from pymongo import MongoClient
-from telegram import Update, TelegramError
+from telegram import Update, error  # Import 'error' instead of 'TelegramError'
 from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
@@ -13,6 +13,8 @@ from telegram.ext import (
     ContextTypes,
     CommandHandler
 )
+
+# ... (rest of your code - no changes required)
 
 # Enable logging
 logging.basicConfig(
