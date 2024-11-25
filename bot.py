@@ -4,7 +4,7 @@ from typing import Dict
 
 import google.generativeai as genai
 from pymongo import MongoClient
-from telegram import Update, error
+from telegram import Update, error, ChatAction
 from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
@@ -13,12 +13,13 @@ from telegram.ext import (
     ContextTypes,
     CommandHandler,
 )
+from telegram.utils import escape_markdown
 
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) 1 
 
 # Telegram Bot Token
 TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo"
@@ -213,11 +214,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_message = update.message.text.lower()
 
-    # Get the response from Gemini
-    reply = await ask_gemini(user_message)
+    # Send typing action
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                       action=ChatAction.TYPING)
 
-    # Combine typing action and response
-    await update.message.reply_text(f"_{reply}_", parse_mode=ParseMode.MARKDOWN)
+    reply = await ask_gemini(user_message)
+    escaped_reply = escape_markdown(reply)  # Escape Markdown characters
+
+    # Combine typing action and response (optional Markdown formatting)
+    await update.message.reply_text(f"_{escaped_reply}_",
+                                    parse_mode=ParseMode.MARKDOWN)
 
 
 def main():
