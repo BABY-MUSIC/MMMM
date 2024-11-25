@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from telegram import Update
+from telegram import Update, ParseMode
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 import asyncio
 
@@ -28,21 +28,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the user's message text
     user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
 
+    # Simulate typing action on Telegram (bot is typing)
+    await update.message.chat.send_action(action="typing")
+
     # Check if the message contains any of the trigger words
     if any(trigger_word in user_message for trigger_word in trigger_words):
         reply = "Hey, I am a Google Assistant trained by Baby Music Team"
     else:
-        # Simulate the typing action on Telegram (bot is typing)
-        await update.message.chat.send_action(action="typing")
-
         # Add a short delay to simulate thinking time
         await asyncio.sleep(0.5)  # Adjust the delay as needed
 
         # Get response from Gemini model
         reply = await ask_gemini(user_message)
 
-    # Send the reply
-    await update.message.reply_text(reply)
+    # Send the reply with Markdown parsing enabled
+    await update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
 
 def main():
