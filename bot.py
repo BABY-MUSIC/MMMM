@@ -85,6 +85,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "- Ensure you're a member of our channel to use this bot.\n\n"
         "Enjoy your experience!"
     )
+    await update.message.reply_text(welcome_message)
+
 async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Approves a user to use the bot."""
     logger.info("Approve user command received.")
