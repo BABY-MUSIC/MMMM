@@ -219,8 +219,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply = await ask_gemini(user_message)
 
     # Combine typing action and response
-    await update.message.reply_text(f"_{reply}_", parse_mode=ParseMode.MARKDOWN)
-
+    await update.message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
