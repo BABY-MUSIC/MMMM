@@ -1,6 +1,6 @@
 import google.generativeai as genai
-from telegram import Update
-from telegram.ext import Application, MessageHandler, filters, ContextTypes
+from pyrogram import Client, filters
+from pyrogram.enums import ChatAction, ParseMode
 import asyncio
 
 # Telegram Bot Token
@@ -28,16 +28,16 @@ async def ask_gemini(question):
     return response.text if response.text else "Sorry, no response."
 
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(client, message):
     # Get the user's message text
-    user_message = update.message.text.lower()  # Convert to lowercase to make it case-insensitive
+    user_message = message.text.lower()  # Convert to lowercase to make it case-insensitive
 
     # Check if the message contains any of the trigger words
     if any(trigger_word in user_message for trigger_word in trigger_words):
         reply = "Hey, I am a Google Assistant trained by Baby Music Team"
     else:
         # Simulate the typing action on Telegram (bot is typing)
-        await update.message.chat.send_action(action="typing")
+        await message.chat.send_action(ChatAction.TYPING)
 
         # Add a short delay to simulate thinking time
         await asyncio.sleep(0.5)  # Adjust the delay as needed
@@ -52,18 +52,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply = escape_markdown_v2(reply)
 
     # Send the reply with MarkdownV2 formatting
-    await update.message.reply_text(reply, parse_mode="MarkdownV2")
+    await message.reply_text(reply, parse_mode=ParseMode.MARKDOWN_V2)
 
 
 def main():
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = Client("gemini_bot", bot_token=TELEGRAM_TOKEN)
 
     # Message handler for all text messages (no need for /gemini)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(filters.text & ~filters.command, handle_message)
 
     # Start the bot
     print("Bot is running...")
-    application.run_polling()
+    app.run()
 
 
 if __name__ == "__main__":
