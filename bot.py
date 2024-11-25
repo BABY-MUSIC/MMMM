@@ -11,7 +11,7 @@ TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 
 # Channel Link
-CHANNEL_USERNAME = "BABY09_WORLD"  # The username of the channel
+CHANNEL_USERNAME = "@BABY09_WORLD"  # Make sure the username has '@'
 
 # Configure the Gemini API with the API Key
 genai.configure(api_key=GEMINI_API_KEY)
@@ -36,8 +36,18 @@ async def check_user_in_channel(update: Update, context: ContextTypes.DEFAULT_TY
         if chat_member.status in ['member', 'administrator', 'creator']:
             return True
     except Exception as e:
-        # If there's an error (e.g., the user is not a member)
+        # Log the error for debugging
         print(f"Error checking user in channel: {e}")
+        
+        # Handle specific errors
+        if "chat not found" in str(e).lower():
+            print("Bot might not be added to the channel or the username is incorrect.")
+        elif "user not found" in str(e).lower():
+            print("The user may not exist or privacy settings might block access.")
+        else:
+            print("An unexpected error occurred.")
+        
+        # Return False if any issue occurs
         return False
     return False
 
@@ -48,7 +58,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_member:
         # If the user is not a member, ask them to join the channel
         await update.message.reply_text(
-            f"Please join the channel @BABY09_WORLD to use the bot:",
+            f"Please join the channel @BABY09_WORLD to use the bot.",
             parse_mode=ParseMode.HTML  # Change to HTML mode to avoid Markdown issues
         )
         return
@@ -61,7 +71,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check if the message contains any of the trigger words
     if any(trigger_word in user_message for trigger_word in trigger_words):
-        reply = "Hey, I am a Google Assistant trained by Baby Music Team, now tell me how can i help you"
+        reply = "Hey, I am a Google Assistant trained by Baby Music Team, now tell me how can I help you?"
     else:
         # Add a short delay to simulate thinking time
         await asyncio.sleep(0.5)  # Adjust the delay as needed
