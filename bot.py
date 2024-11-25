@@ -5,6 +5,7 @@ from typing import Dict
 import google.generativeai as genai
 from pymongo import MongoClient
 from telegram import Update, error
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ParseMode, ChatAction
 from telegram.ext import (
     Application,
@@ -225,8 +226,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /start command."""
     try:
-        # Send a welcome message
-        await update.message.reply_text("Hey! I am your AI assistant. How can I help you today?")
+        # Create the inline button
+        join_button = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("Join 👋", url="https://t.me/BABY09_WORLD")]
+            ]
+        )
+        # Send a welcome message with the button
+        await update.message.reply_text(
+            "Hey! I am your AI assistant. How can I help you today?",
+            reply_markup=join_button
+        )
     except Exception as e:
         logger.error(f"Error in /start command: {e}")
 
