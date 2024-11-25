@@ -63,8 +63,7 @@ async def ask_gemini(question):
 
     # Store the response in the cache (optional)
     response_cache[question] = reply
-    parse_mode=ParseMode.MARKDOWN
-    return reply
+    return reply  # Just return the reply
 
 
 async def is_authorized(user_id: int):
@@ -217,7 +216,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the response from Gemini
     reply = await ask_gemini(user_message)
 
-    # Combine typing action and response
+    # Combine typing action and response, pass parse_mode here
     await update.message.reply_text(f"_{reply}_", parse_mode=ParseMode.MARKDOWN)
 
 
