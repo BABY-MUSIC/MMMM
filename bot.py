@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Telegram Bot Token
-TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo"
+TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo" 
 
 # Gemini API Key
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"  # Replace with your actual Gemini API key
@@ -57,7 +57,7 @@ async def ask_gemini(question):
 
     # Use the generative model from Google Gemini
     model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(question, max_tokens=512)
+    response = model.generate_content(question)  # Removed max_tokens
 
     # Return the response text
     reply = response.text if response.text else "Sorry, no response."
