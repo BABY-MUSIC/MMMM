@@ -58,8 +58,8 @@ async def handle_message(client, message):
 def main():
     app = Client("gemini_bot", bot_token=TELEGRAM_TOKEN)
 
-    # Message handler for all text messages (no need for /gemini)
-    app.add_handler(filters.text & ~filters.command, handle_message)
+    # Message handler for all text messages except commands
+    app.add_handler(filters.text & ~filters.command(), handle_message)
 
     # Start the bot
     print("Bot is running...")
