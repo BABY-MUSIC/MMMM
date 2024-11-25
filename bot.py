@@ -41,7 +41,7 @@ COLLECTION_NAME = "authorized_users"
 # Configure the Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Cache to store recent responses
+# Cache to store recent responses (optional, for performance)
 response_cache = {}
 
 # Initialize MongoDB client
@@ -51,7 +51,7 @@ authorized_users_collection = db[COLLECTION_NAME]
 
 
 async def ask_gemini(question):
-    # Check if the response is in the cache
+    # Check if the response is in the cache (optional)
     if question in response_cache:
         return response_cache[question]
 
@@ -62,7 +62,7 @@ async def ask_gemini(question):
     # Return the response text
     reply = response.text if response.text else "Sorry, no response."
 
-    # Store the response in the cache
+    # Store the response in the cache (optional)
     response_cache[question] = reply
     return reply
 
@@ -88,16 +88,20 @@ async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     try:
-        username = context.args[0]
+        username = context.args[0]  # Get username from command arguments
+        logger.info(f"Attempting to approve user: {username}")
         try:
+            # Fetch user details using the provided username
             user = await context.bot.get_chat(username)
             user_id = user.id
+            logger.info(f"Fetched user ID: {user_id}")
 
             # Store the authorized user in MongoDB
-            authorized_users_collection.insert_one({
+            result = authorized_users_collection.insert_one({
                 "user_id": user_id,
                 "username": username
             })
+            logger.info(f"MongoDB insertion result: {result.acknowledged}")
 
             await update.message.reply_text(f"User {username} has been approved!")
         except error.TelegramError as e:
