@@ -213,6 +213,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_message = update.message.text.lower()
 
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+
     # Get the response from Gemini
     reply = await ask_gemini(user_message)
 
