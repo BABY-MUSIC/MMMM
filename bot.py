@@ -5,7 +5,8 @@ import google.generativeai as genai
 from io import BytesIO
 
 # Configure Google Generative AI
-genai.configure(api_key=os.environ['AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY'])
+api_key = os.getenv('API_KEY', 'AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY')
+genai.configure(api_key=api_key)
 imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
 
 # Define the start command
@@ -38,7 +39,7 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Main function to run the bot
 def main():
-    telegram_token = os.environ['7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo']  # Set your Telegram Bot Token in the environment variable
+    telegram_token = os.getenv('TELEGRAM_BOT_TOKEN', '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo')
     application = ApplicationBuilder().token(telegram_token).build()
 
     # Add handlers
