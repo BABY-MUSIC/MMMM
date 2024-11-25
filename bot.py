@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo"
 
 # Gemini API Key
-GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
+GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"  # Replace with your actual Gemini API key
 
 # Channel Link
 CHANNEL_USERNAME = "@BABY09_WORLD"
@@ -75,12 +75,55 @@ async def is_authorized(user_id: int):
 
 async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Approves a user to use the bot."""
-    # ... (no changes in this function)
+    logger.info("Approve user command received.")
+
+    if update.effective_user.id != OWNER_ID:
+        logger.warning(
+            f"Unauthorized user tried to approve: {update.effective_user.id}"
+        )
+        await update.message.reply_text("You are not authorized to approve users.")
+        return
+
+    try:
+        username = context.args[0]
+        try:
+            user = await context.bot.get_chat(username)
+            user_id = user.id
+
+            # Store the authorized user in MongoDB
+            authorized_users_collection.insert_one({
+                "user_id": user_id,
+                "username": username
+            })
+
+            await update.message.reply_text(f"User {username} has been approved!")
+        except error.TelegramError as e:
+            logger.error(f"Error getting user chat: {e}")
+            await update.message.reply_text(
+                "Error getting user information. Please check the username.")
+            return
+
+    except IndexError:
+        await update.message.reply_text(
+            "Please provide a username to approve. Usage: `/approve @username`"
+        )
+    except Exception as e:
+        logger.exception(f"Error approving user: {e}")
+        await update.message.reply_text(
+            "An error occurred while approving the user.")
 
 
 async def check_user_in_channel(update: Update,
                                context: ContextTypes.DEFAULT_TYPE):
-    # ... (no changes in this function)
+    user_id = update.message.from_user.id
+    try:
+        chat_member = await context.bot.get_chat_member(CHANNEL_USERNAME,
+                                                        user_id)
+        logger.info(f"Chat member status: {chat_member.status}")
+        return chat_member.status in ["member", "administrator", "creator"]
+    except error.TelegramError as e:
+        logger.error(f"Error checking user in channel: {e}")
+        return False
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -116,7 +159,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # ... (no changes in main function)
+    # Add command handler for /approve
+    application.add_handler(CommandHandler("approve", approve_user))
+
+    # Message handler for all text messages
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    # Start the bot
+    print("Bot is running...")
+    application.run_polling()
 
 
 if __name__ == "__main__":
