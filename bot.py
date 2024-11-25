@@ -19,7 +19,7 @@ from telegram.utils import escape_markdown
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
-logger = logging.getLogger(__name__) 1 
+logger = logging.getLogger(__name__)
 
 # Telegram Bot Token
 TELEGRAM_TOKEN = "7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo"
