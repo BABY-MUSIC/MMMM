@@ -6,8 +6,15 @@ import google.generativeai as genai
 from pymongo import MongoClient
 from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, MessageHandler, filters, ContextTypes, 1  CommandHandler
+from telegram.ext import (
+    Application,
+    MessageHandler,
+    filters,
+    ContextTypes,
+    CommandHandler 
+)
 
+# ... (rest of your code)
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
