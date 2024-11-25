@@ -1,47 +1,52 @@
-from telegram.ext import Updater, CommandHandler
+import os
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import google.generativeai as genai
+from io import BytesIO
 
-# Configure Gemini API
-API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
-genai.configure(api_key=API_KEY)
-model_name = "gemini-1.5-flash"
+# Configure Google Generative AI
+genai.configure(api_key=os.environ['AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY'])
+imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
 
-# Function to handle /gemini command
-def gemini(update, context):
-    if len(context.args) == 0:
-        update.message.reply_text("कृपया /gemini के बाद एक प्रश्न प्रदान करें।")
-        return
+# Define the start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Welcome! Send me a text prompt, and I will generate an image for you."
+    )
 
-    user_question = " ".join(context.args)
-
+# Define the image generation handler
+async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    prompt = update.message.text
     try:
-        # Generate response using Gemini API
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(user_question)
+        # Generate images
+        result = imagen.generate_images(
+            prompt=prompt,
+            number_of_images=1,  # Generate one image for simplicity
+            safety_filter_level="block_only_high",
+            person_generation="allow_adult",
+            aspect_ratio="3:4",
+        )
 
-        # Send the Gemini response to the user
-        if response and hasattr(response, "text"):
-            update.message.reply_text(response.text)
-        else:
-            update.message.reply_text("मुझे Gemini से प्रतिक्रिया प्राप्त करने में समस्या हुई।")
-
+        # Convert the image to a file and send to the user
+        for image in result.images:
+            image_data = BytesIO()
+            image._pil_image.save(image_data, format="PNG")
+            image_data.seek(0)
+            await update.message.reply_photo(photo=image_data, caption=f"Image for: {prompt}")
     except Exception as e:
-        # Handle errors
-        update.message.reply_text(f"Gemini API के साथ कनेक्शन में समस्या: {str(e)}")
+        await update.message.reply_text(f"An error occurred: {str(e)}")
 
-# Main function to start the bot
+# Main function to run the bot
 def main():
-    # Replace YOUR_TELEGRAM_BOT_TOKEN with your bot token
-    updater = Updater("7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo", use_context=True)
-    dp = updater.dispatcher
+    telegram_token = os.environ['7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo']  # Set your Telegram Bot Token in the environment variable
+    application = ApplicationBuilder().token(telegram_token).build()
 
-    # Add command handler for /gemini
-    dp.add_handler(CommandHandler("gemini", gemini))
+    # Add handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, generate_image))
 
     # Start the bot
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
-# Ensure this script runs only when executed directly
 if __name__ == "__main__":
     main()
