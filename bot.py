@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -23,14 +23,15 @@ async def ask_gemini(question):
             }
         ]
     }
-
-    response = requests.post(GEMINI_API_URL, headers=headers, json=data)
-    if response.status_code == 200:
-        gemini_response = response.json()
-        # Extracting the response text
-        return gemini_response.get("contents", [{}])[0].get("parts", [{}])[0].get("text", "Sorry, no response.")
-    else:
-        return "Error: Could not connect to Gemini API."
+    
+    # Use aiohttp to make async HTTP request
+    async with aiohttp.ClientSession() as session:
+        async with session.post(GEMINI_API_URL, headers=headers, json=data) as response:
+            if response.status == 200:
+                gemini_response = await response.json()
+                return gemini_response.get("contents", [{}])[0].get("parts", [{}])[0].get("text", "Sorry, no response.")
+            else:
+                return "Error: Could not connect to Gemini API."
 
 
 async def gemini_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
