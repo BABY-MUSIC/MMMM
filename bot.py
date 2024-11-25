@@ -1,4 +1,4 @@
-import aiohttp
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -8,30 +8,16 @@ TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
 # Gemini API Key
 GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 
-# Gemini API endpoint
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
-
+# Configure the Gemini API with the API Key
+genai.configure(api_key=GEMINI_API_KEY)
 
 async def ask_gemini(question):
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": question}
-                ]
-            }
-        ]
-    }
+    # Use the generative model from Google Gemini
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(question)
     
-    # Use aiohttp to make async HTTP request
-    async with aiohttp.ClientSession() as session:
-        async with session.post(GEMINI_API_URL, headers=headers, json=data) as response:
-            if response.status == 200:
-                gemini_response = await response.json()
-                return gemini_response.get("contents", [{}])[0].get("parts", [{}])[0].get("text", "Sorry, no response.")
-            else:
-                return "Error: Could not connect to Gemini API."
+    # Return the response text
+    return response.text if response.text else "Sorry, no response."
 
 
 async def gemini_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
