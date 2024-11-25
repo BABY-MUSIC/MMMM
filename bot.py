@@ -1,47 +1,58 @@
+import requests
 from telegram.ext import Updater, CommandHandler
-import google.generativeai as genai
 
-# Configure Gemini API
-API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
-genai.configure(api_key=API_KEY)
-model_name = "gemini-1.5-flash"
+# Telegram Bot Token
+TELEGRAM_TOKEN = '7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo'
 
-# Function to handle /gemini command
-def gemini(update, context):
-    if len(context.args) == 0:
-        update.message.reply_text("कृपया /gemini के बाद एक प्रश्न प्रदान करें।")
-        return
+# Gemini API Key
+GEMINI_API_KEY = "AIzaSyDq47CQUgrNXQ5WCgw9XDJCudlUrhyC-pY"
 
-    user_question = " ".join(context.args)
+# Gemini API endpoint
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
 
-    try:
-        # Generate response using Gemini API
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(user_question)
 
-        # Send the Gemini response to the user
-        if response and hasattr(response, "text"):
-            update.message.reply_text(response.text)
-        else:
-            update.message.reply_text("मुझे Gemini से प्रतिक्रिया प्राप्त करने में समस्या हुई।")
+def ask_gemini(question):
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": question}
+                ]
+            }
+        ]
+    }
 
-    except Exception as e:
-        # Handle errors
-        update.message.reply_text(f"Gemini API के साथ कनेक्शन में समस्या: {str(e)}")
+    response = requests.post(GEMINI_API_URL, headers=headers, json=data)
+    if response.status_code == 200:
+        gemini_response = response.json()
+        # Extracting the response text
+        return gemini_response.get("contents", [{}])[0].get("parts", [{}])[0].get("text", "Sorry, no response.")
+    else:
+        return "Error: Could not connect to Gemini API."
 
-# Main function to start the bot
+
+def gemini_command(update, context):
+    if len(context.args) > 0:
+        question = " ".join(context.args)
+        reply = ask_gemini(question)
+        update.message.reply_text(reply)
+    else:
+        update.message.reply_text("Please ask a question after /gemini command.")
+
+
 def main():
-    # Replace YOUR_TELEGRAM_BOT_TOKEN with your bot token
-    updater = Updater("7711977179:AAFxPfbCD14LJLTekHKkHKTq6zRUCDscNEo", use_context=True)
-    dp = updater.dispatcher
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
 
-    # Add command handler for /gemini
-    dp.add_handler(CommandHandler("gemini", gemini))
+    # Command handler for /gemini
+    dispatcher.add_handler(CommandHandler("gemini", gemini_command))
 
     # Start the bot
     updater.start_polling()
+    print("Bot is running...")
     updater.idle()
 
-# Ensure this script runs only when executed directly
+
 if __name__ == "__main__":
     main()
