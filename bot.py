@@ -125,6 +125,59 @@ async def approve_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "An error occurred while approving the user.")
 
 
+async def disapprove_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Disapproves a user, removing them from the authorized list."""
+    logger.info("Disapprove user command received.")
+
+    if update.effective_user.id != OWNER_ID:
+        logger.warning(
+            f"Unauthorized user tried to disapprove: {update.effective_user.id}"
+        )
+        await update.message.reply_text(
+            "You are not authorized to disapprove users."
+        )
+        return
+
+    try:
+        username = context.args[0]  # Get username from command arguments
+        logger.info(f"Attempting to disapprove user: {username}")
+
+        try:
+            # Fetch user details using the provided username (optional)
+            user = await context.bot.get_chat(username)
+            user_id = user.id
+            logger.info(f"Fetched user ID: {user_id}")
+
+            # Delete the user from MongoDB using their username
+            result = authorized_users_collection.delete_one({"username": username})
+
+            if result.deleted_count == 1:
+                await update.message.reply_text(
+                    f"User {username} has been disapproved.")
+            else:
+                await update.message.reply_text(
+                    f"User {username} not found in the approved list.")
+
+        except error.TelegramError as e:
+            if e.message == "Chat not found":
+                await update.message.reply_text(
+                    f"Error: User '{username}' not found.")
+            else:
+                logger.error(f"Error getting user chat: {e}")
+                await update.message.reply_text(
+                    "An unexpected error occurred while fetching user information."
+                )
+
+    except IndexError:
+        await update.message.reply_text(
+            "Please provide a username to disapprove. Usage: `/disapprove @username`"
+        )
+    except Exception as e:
+        logger.exception(f"Error disapproving user: {e}")
+        await update.message.reply_text(
+            "An error occurred while disapproving the user.")
+
+
 async def check_user_in_channel(update: Update,
                                context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -170,8 +223,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Add command handler for /approve
+    # Add command handlers
     application.add_handler(CommandHandler("approve", approve_user))
+    application.add_handler(CommandHandler("disapprove", disapprove_user))
 
     # Message handler for all text messages
     application.add_handler(
