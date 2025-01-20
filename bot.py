@@ -38,9 +38,13 @@ CHANNEL_ID = "II_DUNIYA_0"  # Channel username (without '@')
 MESSAGE_ID = 3510  # Message ID to forward
 
 # /start command to forward a specific message from a channel
+# Define the owner's Telegram user ID
+OWNER_ID = 7400383704  # Replace with the actual owner ID
+
 @RADHIKA.on_message(filters.command("start", prefixes=["/"]))
 async def start(client, message: Message):
     logger.info("Received /start command")
+    
     try:
         # Forwarding the specific message from the channel
         forwarded_message = await client.forward_messages(
@@ -49,9 +53,17 @@ async def start(client, message: Message):
             message_ids=MESSAGE_ID
         )
         logger.info("Message forwarded successfully")
+        
+        # Notify the owner that a user started the bot and mention the user
+        user_mention = message.from_user.mention  # This will give the user mention
+        await client.send_message(
+            chat_id=OWNER_ID,
+            text=f"User {user_mention} just started the bot."
+        )
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
+
 
 # Combined responder for both group and private chats
 @RADHIKA.on_message(filters.all & ~filters.bot)
