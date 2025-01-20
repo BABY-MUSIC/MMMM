@@ -3,23 +3,24 @@ import re
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.types import ChatAction
 from pymongo import MongoClient
 
 # Set up logging to track errors and bot activity
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # MongoDB setup
 MONGO_URL = "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority"
 mongo_client = MongoClient(MONGO_URL)
-word_db = mongo_client["Word"]["WordDb"]  # Stores word-response pairs
+word_db = mongo_client["Word"]["WordDb"]  # Collection for word-response pairs
 
-# Initialize bot client
+# Bot configuration
 API_ID = "16457832"  # Replace with your API ID
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"  # Replace with your API Hash
 BOT_TOKEN = "7561329328:AAH33CSzIkYLsFAqjJe_e_H0leDz9H6iOEU"  # Replace with your Bot Token
 
-# Initialize bot client with API ID, API hash, and bot token
+# Initialize bot client
 RADHIKA = Client(
     "my_bot", 
     api_id=API_ID, 
@@ -40,22 +41,32 @@ async def start(client, message: Message):
     logger.info("Received /start command")
     try:
         # Forwarding the specific message from the channel
-        await message.forward(CHANNEL_ID, message_id=MESSAGE_ID)
+        forwarded_message = await client.forward_messages(
+            chat_id=message.chat.id,
+            from_chat_id=CHANNEL_ID,
+            message_ids=MESSAGE_ID
+        )
+        logger.info("Message forwarded successfully")
         await message.reply_text("Here's the post you requested!")
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
 
-# Regular responder to messages in group or private chats
-@RADHIKA.on_message((filters.text | filters.sticker) & ~filters.private & ~filters.bot)
-async def chatbot_responder(client, message: Message):
-    logger.info(f"Received message in group: {message.text}")
+# Combined responder for both group and private chats
+@RADHIKA.on_message(filters.all & ~filters.bot)
+async def chatbot_handler(client, message: Message):
+    logger.info(f"Received message: {message.text} (Chat ID: {message.chat.id}, Private: {message.chat.type == 'private'})")
     
+    # Ignore unwanted messages
     if message.text and re.match(UNWANTED_MESSAGE_REGEX, message.text):
-        logger.info("Message is unwanted (special characters). Ignoring.")
+        logger.info("Unwanted message (special characters). Ignored.")
         return
-    
-    if message.text:
+
+    # Send typing action in private chats
+    if message.chat.type == "private":
+        await client.send_chat_action(message.chat.id, "typing")
+
+    if not message.reply_to_message:  # If not a reply
         responses = list(word_db.find({"word": message.text}))
         if responses:
             response = random.choice(responses)
@@ -66,32 +77,9 @@ async def chatbot_responder(client, message: Message):
                     await message.reply_text(response["text"])
             except Exception as e:
                 logger.error(f"Error sending response: {e}")
-
-# Regular responder for private chats
-@RADHIKA.on_message((filters.text | filters.sticker) & filters.private & ~filters.bot)
-async def chatbot_private(client, message: Message):
-    logger.info(f"Received message in private chat: {message.text}")
-    
-    if message.text and re.match(UNWANTED_MESSAGE_REGEX, message.text):
-        logger.info("Message is unwanted (special characters). Ignoring.")
-        return
-    
-    await RADHIKA.send_chat_action(message.chat.id, "typing")
-
-    if not message.reply_to_message:
-        responses = list(word_db.find({"word": message.text}))
-        if responses:
-            response = random.choice(responses)
-            try:
-                if response["check"] == "sticker":
-                    await message.reply_sticker(response["text"])
-                else:
-                    await message.reply_text(response["text"])
-            except Exception as e:
-                logger.error(f"Error sending response: {e}")
-    else:
+    else:  # If it's a reply
         reply = message.reply_to_message
-        if reply.from_user.id == (await RADHIKA.get_me()).id:
+        if reply.from_user.id == (await client.get_me()).id:  # If replying to bot's message
             responses = list(word_db.find({"word": message.text}))
             if responses:
                 response = random.choice(responses)
@@ -102,11 +90,12 @@ async def chatbot_private(client, message: Message):
                         await message.reply_text(response["text"])
                 except Exception as e:
                     logger.error(f"Error sending response: {e}")
-        else:
+        else:  # If replying to a user's message
             if message.text:
                 word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
             elif message.sticker:
                 word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
+            logger.info("Learned new word-response pair.")
 
 # Run the bot
 try:
