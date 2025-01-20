@@ -2,7 +2,7 @@ import random
 import re
 import logging
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, ChatAction
 from pymongo import MongoClient
 
 # Set up logging to track errors and bot activity
@@ -46,7 +46,6 @@ async def start(client, message: Message):
             message_ids=MESSAGE_ID
         )
         logger.info("Message forwarded successfully")
-        await message.reply_text("Here's the post you requested!")
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
@@ -54,31 +53,19 @@ async def start(client, message: Message):
 # Combined responder for both group and private chats
 @RADHIKA.on_message(filters.all & ~filters.bot)
 async def chatbot_handler(client, message: Message):
-    logger.info(f"Received message: {message.text} (Chat ID: {message.chat.id}, Private: {message.chat.type == 'private'})")
-    
-    # Ignore unwanted messages
-    if message.text and re.match(UNWANTED_MESSAGE_REGEX, message.text):
-        logger.info("Unwanted message (special characters). Ignored.")
-        return
+    if message.text:  # Only handle messages with text
+        logger.info(f"Received message: {message.text} (Chat ID: {message.chat.id}, Private: {message.chat.type == 'private'})")
+        
+        # Ignore unwanted messages
+        if re.match(UNWANTED_MESSAGE_REGEX, message.text):
+            logger.info("Unwanted message (special characters). Ignored.")
+            return
 
-    # Send typing action in private chats
-    if message.chat.type == "private":
-        await client.send_chat_action(message.chat.id, "typing")
+        # Send typing action in private chats
+        if message.chat.type == "private":
+            await client.send_chat_action(message.chat.id, ChatAction.TYPING)
 
-    if not message.reply_to_message:  # If not a reply
-        responses = list(word_db.find({"word": message.text}))
-        if responses:
-            response = random.choice(responses)
-            try:
-                if response["check"] == "sticker":
-                    await message.reply_sticker(response["text"])
-                else:
-                    await message.reply_text(response["text"])
-            except Exception as e:
-                logger.error(f"Error sending response: {e}")
-    else:  # If it's a reply
-        reply = message.reply_to_message
-        if reply.from_user.id == (await client.get_me()).id:  # If replying to bot's message
+        if not message.reply_to_message:  # If not a reply
             responses = list(word_db.find({"word": message.text}))
             if responses:
                 response = random.choice(responses)
@@ -89,12 +76,25 @@ async def chatbot_handler(client, message: Message):
                         await message.reply_text(response["text"])
                 except Exception as e:
                     logger.error(f"Error sending response: {e}")
-        else:  # If replying to a user's message
-            if message.text:
-                word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
-            elif message.sticker:
-                word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
-            logger.info("Learned new word-response pair.")
+        else:  # If it's a reply
+            reply = message.reply_to_message
+            if reply.from_user.id == (await client.get_me()).id:  # If replying to bot's message
+                responses = list(word_db.find({"word": message.text}))
+                if responses:
+                    response = random.choice(responses)
+                    try:
+                        if response["check"] == "sticker":
+                            await message.reply_sticker(response["text"])
+                        else:
+                            await message.reply_text(response["text"])
+                    except Exception as e:
+                        logger.error(f"Error sending response: {e}")
+            else:  # If replying to a user's message
+                if message.text:
+                    word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
+                elif message.sticker:
+                    word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
+                logger.info("Learned new word-response pair.")
 
 # Run the bot
 try:
