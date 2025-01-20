@@ -1,7 +1,8 @@
 import random
 import re
 import logging
-from pyrogram import Client, filters, ChatAction
+from pyrogram.enums import ChatAction
+from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
 
