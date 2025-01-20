@@ -3,7 +3,6 @@ import re
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.types import ChatAction
 from pymongo import MongoClient
 
 # Set up logging to track errors and bot activity
