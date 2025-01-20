@@ -1,3 +1,4 @@
+import asyncio
 import random
 import re
 import logging
@@ -5,14 +6,15 @@ from pyrogram.enums import ChatAction
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 # Set up logging to track errors and bot activity
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# MongoDB setup
+# MongoDB setup (using motor for async access)
 MONGO_URL = "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority"
-mongo_client = MongoClient(MONGO_URL)
+mongo_client = AsyncIOMotorClient(MONGO_URL)
 word_db = mongo_client["Word"]["WordDb"]  # Collection for word-response pairs
 
 # Bot configuration
@@ -62,12 +64,12 @@ async def chatbot_handler(client, message: Message):
             logger.info("Unwanted message (special characters). Ignored.")
             return
 
-        # Send typing action in private chats
-        if message.chat.type == "private":
+        # Send typing action in private and group chats
+        if message.chat.type in ["private", "group"]:
             await client.send_chat_action(message.chat.id, ChatAction.TYPING)
 
         if not message.reply_to_message:  # If not a reply
-            responses = list(word_db.find({"word": message.text}))
+            responses = await word_db.find({"word": message.text}).to_list(length=10)
             if responses:
                 response = random.choice(responses)
                 try:
@@ -80,7 +82,7 @@ async def chatbot_handler(client, message: Message):
         else:  # If it's a reply
             reply = message.reply_to_message
             if reply.from_user.id == (await client.get_me()).id:  # If replying to bot's message
-                responses = list(word_db.find({"word": message.text}))
+                responses = await word_db.find({"word": message.text}).to_list(length=10)
                 if responses:
                     response = random.choice(responses)
                     try:
@@ -92,9 +94,9 @@ async def chatbot_handler(client, message: Message):
                         logger.error(f"Error sending response: {e}")
             else:  # If replying to a user's message
                 if message.text:
-                    word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
+                    await word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
                 elif message.sticker:
-                    word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
+                    await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
 # Run the bot
