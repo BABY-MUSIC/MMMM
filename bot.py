@@ -130,7 +130,8 @@ def home():
 
 # Run Flask app in a separate thread to not block the bot's execution
 def run_flask():
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    port = int(os.environ.get("PORT", 8000))  # Get the port from environment variable or use 8000 as fallback
+    app.run(host='0.0.0.0', port=port, debug=False)
 
 # Run the bot client and Flask in separate threads
 if __name__ == "__main__":
