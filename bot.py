@@ -42,6 +42,13 @@ MESSAGE_ID = 3510  # Message ID to forward
 # Define the owner's Telegram user ID
 OWNER_ID = 7400383704  # Replace with the actual owner ID
 
+@RADHIKA.on_message(filters.command(["clone"], prefixes="/") | filters.regex(r"(?i)\bclone\b"))
+async def handle_clone(client, message):
+    await message.reply(
+        "Currently unavailable. Contact Support chat [here](https://t.me/+OL6jdTL7JAJjYzVl)",
+        disable_web_page_preview=True
+    )
+
 @RADHIKA.on_message(filters.command("start", prefixes=["/"]))
 async def start(client, message: Message):
     logger.info("Received /start command")
