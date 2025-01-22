@@ -2,6 +2,7 @@ import asyncio
 import random
 import re
 import logging
+import os
 from pyrogram.enums import ChatAction
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -37,7 +38,7 @@ UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
 CHANNEL_ID = "II_DUNIYA_0"  # Channel username (without '@')
 MESSAGE_ID = 3510  # Message ID to forward
 
-# /start command to forward a specific message from a channel
+# /start command to forward a specific message from the channel
 # Define the owner's Telegram user ID
 OWNER_ID = 7400383704  # Replace with the actual owner ID
 
@@ -111,9 +112,13 @@ async def chatbot_handler(client, message: Message):
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
-# Run the bot
+# Get the port from the environment variables (for Heroku)
+PORT = int(os.environ.get("PORT", 5000))  # Default to 5000 if not set by Heroku
+
+# Run the bot with Heroku's environment settings
 try:
     logger.info("Starting bot...")
+    # Start the bot client
     RADHIKA.run()
 except Exception as e:
     logger.error(f"Error running the bot: {e}")
