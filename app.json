@@ -8,19 +8,19 @@
   "env": {
     "API_ID": {
       "description": "Your Telegram API ID from https://my.telegram.org",
-      "required": true
+      "required": false
     },
     "API_HASH": {
       "description": "Your Telegram API Hash from https://my.telegram.org",
-      "required": true
+      "required": false
     },
     "BOT_TOKEN": {
       "description": "Your Bot Token from @BotFather",
-      "required": true
+      "required": false
     },
     "OWNER_ID": {
       "description": "Telegram User ID of the bot owner",
-      "required": true
+      "required": false
     }
   },
   "buildpacks": [
