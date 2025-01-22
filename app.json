@@ -1,0 +1,31 @@
+{
+  "name": "RadhikaBot",
+  "description": "A fast and responsive Telegram bot built with Pyrogram.",
+  "repository": "https://github.com/BABY-MUSIC/MM",
+  "logo": "https://files.catbox.moe/9fdn7v.jpg", 
+  "keywords": ["telegram", "bot", "pyrogram"],
+  "stack": "container",
+  "env": {
+    "API_ID": {
+      "description": "Your Telegram API ID from https://my.telegram.org",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Your Telegram API Hash from https://my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Your Bot Token from @BotFather",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Telegram User ID of the bot owner",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
