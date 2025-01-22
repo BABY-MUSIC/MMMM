@@ -13,8 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Expose the port (optional, if required for debugging or webhooks)
-# EXPOSE 8080
-
 # Define the command to run the bot
 CMD ["python3", "bot.py"]
