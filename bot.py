@@ -20,7 +20,7 @@ word_db = mongo_client["Word"]["WordDb"]  # Collection for word-response pairs
 # Bot configuration
 API_ID = "16457832"  # Replace with your API ID
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"  # Replace with your API Hash
-BOT_TOKEN = ""  # Replace with your Bot Token
+BOT_TOKEN = "7242058454:AAE6TakbWWxpS6Xiq-XLXpWPZew9wzxNAu8"  # Replace with your Bot Token
 
 # Initialize bot client
 RADHIKA = Client(
