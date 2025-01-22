@@ -35,8 +35,8 @@ RADHIKA = Client(
 UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
 
 # Channel ID or message link to forward from
-CHANNEL_ID = "II_DUNIYA_0"  # Channel username (without '@')
-MESSAGE_ID = 3510  # Message ID to forward
+CHANNEL_ID = "chattinghuboo"  # Channel username (without '@')
+MESSAGE_ID = 2  # Message ID to forward
 
 # /start command to forward a specific message from the channel
 # Define the owner's Telegram user ID
