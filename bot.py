@@ -8,6 +8,8 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
+from flask import Flask
+from threading import Thread
 
 # Set up logging to track errors and bot activity
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -119,10 +121,30 @@ async def chatbot_handler(client, message: Message):
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
-# Run the bot with Heroku's environment settings
-try:
-    logger.info("Starting bot...")
-    # Start the bot client
-    RADHIKA.run()
-except Exception as e:
-    logger.error(f"Error running the bot: {e}")
+# Initialize Flask app
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Flask app is running!"
+
+# Run Flask app in a separate thread to not block the bot's execution
+def run_flask():
+    app.run(host='0.0.0.0', port=8000, debug=False)
+
+# Run the bot client and Flask in separate threads
+if __name__ == "__main__":
+    # Start Flask app in a separate thread
+    flask_thread = Thread(target=run_flask)
+    flask_thread.start()
+
+    # Start the Pyrogram bot and keep it running
+    try:
+        logger.info("Starting bot...")
+        # Start the bot client
+        RADHIKA.run()
+
+        # Keep the bot alive by calling idle()
+        asyncio.run(RADHIKA.idle())
+    except Exception as e:
+        logger.error(f"Error running the bot: {e}")
