@@ -119,9 +119,6 @@ async def chatbot_handler(client, message: Message):
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
-# Get the port from the environment variables (for Heroku)
-PORT = int(os.environ.get("PORT", 5000))  # Default to 5000 if not set by Heroku
-
 # Run the bot with Heroku's environment settings
 try:
     logger.info("Starting bot...")
