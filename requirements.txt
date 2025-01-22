@@ -1,5 +1,6 @@
-pyrogram==2.0.106
-motor==3.1.1
-pymongo==4.4.1
-asyncio==3.4.3
+pyrogram
+motor
+pymongo
+asyncio
 tgcrypto
+flask
