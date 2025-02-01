@@ -42,7 +42,7 @@ MESSAGE_ID = 2  # Message ID to forward
 
 # /start command to forward a specific message from the channel
 # Define the owner's Telegram user ID
-OWNER_ID = 7400383704  # Replace with the actual owner ID
+OWNER_ID = 6977190988  # Replace with the actual owner ID
 
 @RADHIKA.on_message(filters.command(["clone"], prefixes="/") | filters.regex(r"(?i)\bclone\b"))
 async def handle_clone(client, message):
