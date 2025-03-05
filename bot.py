@@ -47,7 +47,7 @@ OWNER_ID = 6657539971  # Replace with the actual owner ID
 @RADHIKA.on_message(filters.command(["clone"], prefixes="/") | filters.regex(r"(?i)\bclone\b"))
 async def handle_clone(client, message):
     await message.reply(
-        "Currently unavailable. Contact Support chat [here](https://t.me/+OL6jdTL7JAJjYzVl)",
+        "Currently unavailable. Contact Support chat [here](https://t.me/+HiS0W_Zz2XJhNjZl)",
         disable_web_page_preview=True
     )
 
