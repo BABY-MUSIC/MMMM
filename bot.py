@@ -72,6 +72,7 @@ from pyrogram.types import (
 
 
 
+user_responses = {}
 
 @RADHIKA.on_message(filters.command("start") & filters.private)
 async def start_handler(client: Client, message: Message):
@@ -82,14 +83,12 @@ async def start_handler(client: Client, message: Message):
             "Please choose your plan:",
             reply_markup=ReplyKeyboardMarkup(buttons, one_time_keyboard=True, resize_keyboard=True)
         )
-        
+
+        # ✅ Queue-based approach for capturing user input
+        user_responses[message.chat.id] = asyncio.Queue()
+
         try:
-            # ✅ User का अगला मैसेज कैप्चर करने के लिए wait_for_message() का उपयोग
-            response = await client.wait_for_message(
-                chat_id=message.chat.id,
-                filters=filters.text,
-                timeout=60
-            )
+            response = await asyncio.wait_for(user_responses[message.chat.id].get(), timeout=60)
 
             if response.text in [f"₹{price} for {duration}" for price, duration in PLANS.items()]:
                 price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
@@ -116,7 +115,9 @@ async def start_handler(client: Client, message: Message):
 
         except asyncio.TimeoutError:
             await sent_msg.reply_text("❌ No response received. Try again.", reply_markup=ReplyKeyboardRemove())
-    
+
+        del user_responses[message.chat.id]  # Response Queue Delete करें
+        
         return  # ताकि chatbot handler इसको प्रोसेस न करे
 
     # ✅ Default Reply (Forward Message)
@@ -129,10 +130,17 @@ async def start_handler(client: Client, message: Message):
     except Exception as e:
         await message.reply_text("Something went wrong while forwarding the message.")
 
+# ✅ Capture User Messages for Plan Selection
+@RADHIKA.on_message(filters.text & filters.private)
+async def capture_user_response(client: Client, message: Message):
+    if message.chat.id in user_responses:
+        await user_responses[message.chat.id].put(message)
+
 # ✅ Check बटन पर क्लिक करने पर पॉपअप मैसेज
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query):
     await query.answer("Thanks for choosing the plan!", show_alert=True)
+
 
 
 
