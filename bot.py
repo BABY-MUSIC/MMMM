@@ -51,28 +51,73 @@ async def handle_clone(client, message):
         disable_web_page_preview=True
     )
 
-@RADHIKA.on_message(filters.command("start", prefixes=["/"]))
+# प्लान बटन बनाने के लिए
+PLANS = {
+    "50": "1 Hour",
+    "100": "6 Hours",
+    "200": "24 Hours",
+    "500": "3 Days"
+}
+
+# /start command (फॉरवर्ड मैसेज के साथ)
+@RADHIKA.on_message(filters.command("start"))
 async def start(client, message: Message):
     logger.info("Received /start command")
     
     try:
-        # Forwarding the specific message from the channel
-        forwarded_message = await client.forward_messages(
+        # चैनल से मैसेज फॉरवर्ड करना
+        await client.forward_messages(
             chat_id=message.chat.id,
             from_chat_id=CHANNEL_ID,
             message_ids=MESSAGE_ID
         )
         logger.info("Message forwarded successfully")
-        
-        # Notify the owner that a user started the bot and mention the user
-        user_mention = message.from_user.mention  # This will give the user mention
-        await client.send_message(
-            chat_id=OWNER_ID,
-            text=f"User {user_mention} just started the bot."
-        )
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
+
+# जब कोई यूजर "t.me/radhika/call" लिंक पर क्लिक करेगा
+@RADHIKA.on_message(filters.regex(r"(t\.me\/radhika\/call)"))
+async def call_handler(client, message: Message):
+    buttons = [
+        [InlineKeyboardButton(f"₹{price} for {duration}", callback_data=f"plan_{price}")]
+        for price, duration in PLANS.items()
+    ]
+    
+    await message.reply_text(
+        "Please choose your plan:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+# प्लान सेलेक्ट करने पर प्रोसेसिंग और इमेज भेजना
+@RADHIKA.on_callback_query(filters.regex(r"^plan_\d+$"))
+async def plan_selected(client: Client, query: CallbackQuery):
+    price = query.data.split("_")[1]  # प्लान का प्राइस निकालना
+    
+    # "Processing..." मैसेज भेजकर डिलीट करना
+    processing_msg = await query.message.reply_text("Processing...")
+    await asyncio.sleep(2)
+    await processing_msg.delete()
+
+    # प्लान की इमेज भेजना
+    image_path = f"plans/{price}.png"
+    try:
+        await client.send_photo(
+            chat_id=query.message.chat.id,
+            photo=image_path,
+            caption=f"**Plan Selected: ₹{price} for {PLANS[price]}**",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
+            )
+        )
+    except Exception as e:
+        await query.message.reply_text(f"Error: {e}")
+
+# Check बटन पर क्लिक करने पर पॉपअप मैसेज
+@RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
+async def check_plan(client: Client, query: CallbackQuery):
+    await query.answer("Thanks for choosing the plan!", show_alert=True)
+
 
 
 # Combined responder for both group and private chats
