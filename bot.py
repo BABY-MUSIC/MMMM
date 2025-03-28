@@ -120,7 +120,7 @@ async def capture_user_response(client: Client, message: Message):
 
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query: CallbackQuery):
-    await query.answer("Thanks for choosing the plan!", show_alert=True)
+    await query.answer("Payment ❌ not received !", show_alert=True)
 
 @RADHIKA.on_message(filters.all & ~filters.bot)
 async def chatbot_handler(client, message: Message):
