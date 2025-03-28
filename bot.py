@@ -62,63 +62,72 @@ PLANS = {
 }
 
 
-@RADHIKA.on_message(filters.command("start"))
-async def start(client, message: Message):
-    logger.info("Received /start command")
-    
-    # अगर /start call दिया गया है तो प्लान सेलेक्शन मेनू दिखाएं
+import asyncio
+import logging
+from pyrogram import Client, filters
+from pyrogram.types import (
+    ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup,
+    InlineKeyboardButton, Message
+)
+
+
+
+@RADHIKA.on_message(filters.command("start") & filters.private)
+async def start_handler(client: Client, message: Message):
     if len(message.command) > 1 and message.command[1] == "call":
-        buttons = [
-            [InlineKeyboardButton(f"₹{price} for {duration}", callback_data=f"plan_{price}")]
-            for price, duration in PLANS.items()
-        ]
+        buttons = [[f"₹{price} for {duration}"] for price, duration in PLANS.items()]
         
-        await message.reply_text(
+        sent_msg = await message.reply_text(
             "Please choose your plan:",
-            reply_markup=InlineKeyboardMarkup(buttons)
+            reply_markup=ReplyKeyboardMarkup(buttons, one_time_keyboard=True, resize_keyboard=True)
         )
-        return
+        
+        try:
+            response = await client.listen(message.chat.id, filters=filters.text, timeout=60)
+            
+            if response.text in [f"₹{price} for {duration}" for price, duration in PLANS.items()]:
+                price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
+                
+                # 🔄 Processing Message
+                processing_msg = await response.reply_text("Processing...")
+                await asyncio.sleep(2)
+                await processing_msg.delete()
+
+                # 📸 Plan Image + Check Button
+                image_path = f"plans/{price}.png"  # इमेज का पाथ
+                
+                try:
+                    await client.send_photo(
+                        chat_id=message.chat.id,
+                        photo=image_path,
+                        caption=f"**✅ Plan Selected: ₹{price} for {PLANS[price]}**",
+                        reply_markup=InlineKeyboardMarkup(
+                            [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
+                        )
+                    )
+                except Exception as e:
+                    await response.reply_text(f"Error loading plan image: {e}")
+
+        except asyncio.TimeoutError:
+            await sent_msg.reply_text("❌ No response received. Try again.", reply_markup=ReplyKeyboardRemove())
     
-    # वरना /start पर सिर्फ फॉरवर्ड मैसेज भेजे
+        return  # ताकि chatbot handler इसको प्रोसेस न करे
+
+    # ✅ Default Reply (Forward Message)
     try:
         await client.forward_messages(
             chat_id=message.chat.id,
             from_chat_id=CHANNEL_ID,
             message_ids=MESSAGE_ID
         )
-        logger.info("Message forwarded successfully")
     except Exception as e:
-        logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
 
-# प्लान सेलेक्ट करने पर प्रोसेसिंग और इमेज भेजना
-@RADHIKA.on_callback_query(filters.regex(r"^plan_\d+$"))
-async def plan_selected(client: Client, query: CallbackQuery):
-    price = query.data.split("_")[1]  # प्लान का प्राइस निकालना
-    
-    # "Processing..." मैसेज भेजकर डिलीट करना
-    processing_msg = await query.message.reply_text("Processing...")
-    await asyncio.sleep(2)
-    await processing_msg.delete()
-
-    # प्लान की इमेज भेजना
-    image_path = f"plans/{price}.png"
-    try:
-        await client.send_photo(
-            chat_id=query.message.chat.id,
-            photo=image_path,
-            caption=f"**Plan Selected: ₹{price} for {PLANS[price]}**",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
-            )
-        )
-    except Exception as e:
-        await query.message.reply_text(f"Error: {e}")
-
-# Check बटन पर क्लिक करने पर पॉपअप मैसेज
+# ✅ Check बटन पर क्लिक करने पर पॉपअप मैसेज
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
-async def check_plan(client: Client, query: CallbackQuery):
+async def check_plan(client: Client, query):
     await query.answer("Thanks for choosing the plan!", show_alert=True)
+
 
 
 
