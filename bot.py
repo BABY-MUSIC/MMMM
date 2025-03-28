@@ -64,10 +64,11 @@ PLANS = {
 
 import asyncio
 import logging
+import re
 from pyrogram import Client, filters
 from pyrogram.types import (
     ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup,
-    InlineKeyboardButton, Message
+    InlineKeyboardButton, Message, CallbackQuery
 )
 
 
@@ -88,30 +89,37 @@ async def start_handler(client: Client, message: Message):
         user_responses[message.chat.id] = asyncio.Queue()
 
         try:
-            response = await asyncio.wait_for(user_responses[message.chat.id].get(), timeout=60)
+            while True:
+                response = await asyncio.wait_for(user_responses[message.chat.id].get(), timeout=60)
 
-            if response.text in [f"₹{price} for {duration}" for price, duration in PLANS.items()]:
-                price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
-                
-                # 🔄 Processing Message
-                processing_msg = await response.reply_text("Processing...")
-                await asyncio.sleep(2)
-                await processing_msg.delete()
+                # ✅ सिर्फ वही मैसेज एक्सेप्ट होगा जो "₹" से शुरू होता है
+                if response.text.startswith("₹"):
+                    price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
+                    
+                    # 🔄 Processing Message
+                    processing_msg = await response.reply_text("Processing...")
+                    await asyncio.sleep(2)
+                    await processing_msg.delete()
 
-                # 📸 Plan Image + Check Button
-                image_path = f"plans/{price}.png"  # इमेज का पाथ
-                
-                try:
-                    await client.send_photo(
-                        chat_id=message.chat.id,
-                        photo=image_path,
-                        caption=f"**✅ Plan Selected: ₹{price} for {PLANS[price]}**",
-                        reply_markup=InlineKeyboardMarkup(
-                            [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
+                    # 📸 Plan Image + Check Button
+                    image_path = f"plans/{price}.png"  # इमेज का पाथ
+                    
+                    try:
+                        await client.send_photo(
+                            chat_id=message.chat.id,
+                            photo=image_path,
+                            caption=f"**✅ Plan Selected: ₹{price} for {PLANS[price]}**",
+                            reply_markup=InlineKeyboardMarkup(
+                                [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
+                            )
                         )
-                    )
-                except Exception as e:
-                    await response.reply_text(f"Error loading plan image: {e}")
+                    except Exception as e:
+                        await response.reply_text(f"Error loading plan image: {e}")
+                    
+                    break  # ✅ सही मैसेज मिलने के बाद लूप ब्रेक कर दो
+                
+                else:
+                    await response.reply_text("❌ Invalid selection! Please choose a valid plan.")
 
         except asyncio.TimeoutError:
             await sent_msg.reply_text("❌ No response received. Try again.", reply_markup=ReplyKeyboardRemove())
@@ -130,16 +138,17 @@ async def start_handler(client: Client, message: Message):
     except Exception as e:
         await message.reply_text("Something went wrong while forwarding the message.")
 
-# ✅ Capture User Messages for Plan Selection
-@RADHIKA.on_message(filters.text & filters.private)
+# ✅ सिर्फ "₹" से शुरू होने वाले मैसेज को ही Allow करो
+@RADHIKA.on_message(filters.text & filters.private & filters.regex(r"^₹"))
 async def capture_user_response(client: Client, message: Message):
     if message.chat.id in user_responses:
-        await user_responses[message.chat.id].put(message)
+        await user_responses[message.chat.id].put(message)  # ✅ Valid Plan Message Store करें
 
 # ✅ Check बटन पर क्लिक करने पर पॉपअप मैसेज
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
-async def check_plan(client: Client, query):
+async def check_plan(client: Client, query: CallbackQuery):
     await query.answer("Thanks for choosing the plan!", show_alert=True)
+
 
 
 
