@@ -10,6 +10,8 @@ from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from flask import Flask
 from threading import Thread
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+
 
 # Set up logging to track errors and bot activity
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
