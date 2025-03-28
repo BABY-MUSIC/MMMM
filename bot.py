@@ -55,8 +55,20 @@ async def handle_clone(client, message):
         disable_web_page_preview=True
     )
 
+
 @RADHIKA.on_message(filters.command("start") & filters.private)
 async def start_handler(client: Client, message: Message):
+    # ✅ Owner को Notify करना
+    user_mention = message.from_user.mention
+    user_id = message.from_user.id
+    
+    notify_text = f"👤 **New User Started Bot**\n\n🔹 **User:** {user_mention} (`{user_id}`)\n🔹 **Chat ID:** `{message.chat.id}`"
+    
+    try:
+        await client.send_message(OWNER_ID, notify_text)
+    except Exception as e:
+        logger.error(f"Failed to notify owner: {e}")
+
     if len(message.command) > 1 and message.command[1] == "call":
         buttons = [[f"₹{price} for {duration}"] for price, duration in PLANS.items()]
         
@@ -114,6 +126,7 @@ async def start_handler(client: Client, message: Message):
         )
     except Exception as e:
         await message.reply_text("Something went wrong while forwarding the message.")
+
 
 @RADHIKA.on_message(filters.text & filters.private & filters.regex(r"^₹"))
 async def capture_user_response(client: Client, message: Message):
