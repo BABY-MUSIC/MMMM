@@ -37,6 +37,7 @@ UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
 CHANNEL_ID = "RadhikaCommunity"
 MESSAGE_ID = 2354
 OWNER_ID = 6657539971
+SUPPORT_URL = "https://t.me/+HiS0W_Zz2XJhNjZl"
 
 user_responses = {}
 
@@ -85,9 +86,10 @@ async def start_handler(client: Client, message: Message):
                             chat_id=message.chat.id,
                             photo=image_path,
                             caption=f"**Pay : ₹{price} and select Check for Call 🫦**",
-                            reply_markup=InlineKeyboardMarkup(
-                                [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
-                            )
+                            reply_markup=InlineKeyboardMarkup([
+                                [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
+                                [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
+                            ])
                         )
                     except Exception as e:
                         await response.reply_text(f"Error loading plan image: {e}")
@@ -120,7 +122,7 @@ async def capture_user_response(client: Client, message: Message):
 
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query: CallbackQuery):
-    await query.answer("Payment ❌ not received !", show_alert=True)
+    await query.answer("Payment ❌ not received ! get support", show_alert=True)
 
 @RADHIKA.on_message(filters.all & ~filters.bot)
 async def chatbot_handler(client, message: Message):
