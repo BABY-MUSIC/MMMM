@@ -72,6 +72,7 @@ from pyrogram.types import (
 
 
 
+
 @RADHIKA.on_message(filters.command("start") & filters.private)
 async def start_handler(client: Client, message: Message):
     if len(message.command) > 1 and message.command[1] == "call":
@@ -83,8 +84,13 @@ async def start_handler(client: Client, message: Message):
         )
         
         try:
-            response = await client.listen(message.chat.id, filters=filters.text, timeout=60)
-            
+            # ✅ User का अगला मैसेज कैप्चर करने के लिए wait_for_message() का उपयोग
+            response = await client.wait_for_message(
+                chat_id=message.chat.id,
+                filters=filters.text,
+                timeout=60
+            )
+
             if response.text in [f"₹{price} for {duration}" for price, duration in PLANS.items()]:
                 price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
                 
