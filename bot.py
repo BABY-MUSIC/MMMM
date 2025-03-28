@@ -96,8 +96,11 @@ async def start_handler(client: Client, message: Message):
                 if response.text.startswith("₹"):
                     price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
                     
-                    # 🔄 Processing Message
-                    processing_msg = await response.reply_text("Processing...")
+                    # 🔄 Processing Message + ReplyKeyboard Remove
+                    processing_msg = await response.reply_text(
+                        "Processing...",
+                        reply_markup=ReplyKeyboardRemove()  # ✅ अब कीबोर्ड हट जाएगा
+                    )
                     await asyncio.sleep(2)
                     await processing_msg.delete()
 
