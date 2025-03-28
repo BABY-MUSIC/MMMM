@@ -116,7 +116,7 @@ async def start_handler(client: Client, message: Message):
 @RADHIKA.on_message(filters.text & filters.private & filters.regex(r"^₹"))
 async def capture_user_response(client: Client, message: Message):
     if message.chat.id in user_responses:
-        await user_responses[message.chat.id].put(message)  # ✅ Valid Plan Message Store करें
+        await user_responses[message.chat.id].put(message)
 
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query: CallbackQuery):
