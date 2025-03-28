@@ -64,27 +64,21 @@ async def start_handler(client: Client, message: Message):
             reply_markup=ReplyKeyboardMarkup(buttons, one_time_keyboard=True, resize_keyboard=True)
         )
 
-        # ✅ Queue-based approach for capturing user input
         user_responses[message.chat.id] = asyncio.Queue()
 
         try:
             while True:
                 response = await asyncio.wait_for(user_responses[message.chat.id].get(), timeout=60)
 
-                # ✅ सिर्फ वही मैसेज एक्सेप्ट होगा जो "₹" से शुरू होता है
                 if response.text.startswith("₹"):
-                    price = response.text.split(" ")[0][1:]  # ₹ हटाकर प्राइस निकालना
-                    
-                    # 🔄 Processing Message + ReplyKeyboard Remove
+                    price = response.text.split(" ")[0][1:]
                     processing_msg = await response.reply_text(
                         "Processing...",
-                        reply_markup=ReplyKeyboardRemove()  # ✅ अब कीबोर्ड हट जाएगा
+                        reply_markup=ReplyKeyboardRemove()
                     )
                     await asyncio.sleep(2)
                     await processing_msg.delete()
-
-                    # 📸 Plan Image + Check Button
-                    image_path = f"plans/{price}.png"  # इमेज का पाथ
+                    image_path = f"plans/{price}.png"
                     
                     try:
                         await client.send_photo(
@@ -98,7 +92,7 @@ async def start_handler(client: Client, message: Message):
                     except Exception as e:
                         await response.reply_text(f"Error loading plan image: {e}")
                     
-                    break  # ✅ सही मैसेज मिलने के बाद लूप ब्रेक कर दो
+                    break
                 
                 else:
                     await response.reply_text("❌ Invalid selection! Please choose a valid plan.")
@@ -106,11 +100,10 @@ async def start_handler(client: Client, message: Message):
         except asyncio.TimeoutError:
             await sent_msg.reply_text("❌ No response received. Try again.", reply_markup=ReplyKeyboardRemove())
 
-        del user_responses[message.chat.id]  # Response Queue Delete करें
+        del user_responses[message.chat.id]
         
-        return  # ताकि chatbot handler इसको प्रोसेस न करे
+        return
 
-    # ✅ Default Reply (Forward Message)
     try:
         await client.forward_messages(
             chat_id=message.chat.id,
@@ -120,34 +113,28 @@ async def start_handler(client: Client, message: Message):
     except Exception as e:
         await message.reply_text("Something went wrong while forwarding the message.")
 
-# ✅ सिर्फ "₹" से शुरू होने वाले मैसेज को ही Allow करो
 @RADHIKA.on_message(filters.text & filters.private & filters.regex(r"^₹"))
 async def capture_user_response(client: Client, message: Message):
     if message.chat.id in user_responses:
         await user_responses[message.chat.id].put(message)  # ✅ Valid Plan Message Store करें
 
-# ✅ Check बटन पर क्लिक करने पर पॉपअप मैसेज
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query: CallbackQuery):
     await query.answer("Thanks for choosing the plan!", show_alert=True)
 
-
-# Combined responder for both group and private chats
 @RADHIKA.on_message(filters.all & ~filters.bot)
 async def chatbot_handler(client, message: Message):
-    if message.text:  # Only handle messages with text
+    if message.text:
         logger.info(f"Received message: {message.text} (Chat ID: {message.chat.id}, Private: {message.chat.type == 'private'})")
         
-        # Ignore unwanted messages
         if re.match(UNWANTED_MESSAGE_REGEX, message.text):
             logger.info("Unwanted message (special characters). Ignored.")
             return
 
-        # Send typing action in private and group chats
         if message.chat.type in ["private", "group"]:
             await client.send_chat_action(message.chat.id, ChatAction.TYPING)
 
-        if not message.reply_to_message:  # If not a reply
+        if not message.reply_to_message:
             responses = await word_db.find({"word": message.text}).to_list(length=10)
             if responses:
                 response = random.choice(responses)
@@ -158,9 +145,9 @@ async def chatbot_handler(client, message: Message):
                         await message.reply_text(response["text"])
                 except Exception as e:
                     logger.error(f"Error sending response: {e}")
-        else:  # If it's a reply
+        else:
             reply = message.reply_to_message
-            if reply.from_user.id == (await client.get_me()).id:  # If replying to bot's message
+            if reply.from_user.id == (await client.get_me()).id:
                 responses = await word_db.find({"word": message.text}).to_list(length=10)
                 if responses:
                     response = random.choice(responses)
@@ -171,38 +158,30 @@ async def chatbot_handler(client, message: Message):
                             await message.reply_text(response["text"])
                     except Exception as e:
                         logger.error(f"Error sending response: {e}")
-            else:  # If replying to a user's message
+            else:
                 if message.text:
                     await word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
                 elif message.sticker:
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
-# Initialize Flask app
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Flask app is running!"
 
-# Run Flask app in a separate thread to not block the bot's execution
 def run_flask():
-    port = int(os.environ.get("PORT", 8000))  # Get the port from environment variable or use 8000 as fallback
+    port = int(os.environ.get("PORT", 8000))
     app.run(host='0.0.0.0', port=port, debug=False)
 
-# Run the bot client and Flask in separate threads
 if __name__ == "__main__":
-    # Start Flask app in a separate thread
     flask_thread = Thread(target=run_flask)
     flask_thread.start()
 
-    # Start the Pyrogram bot and keep it running
     try:
-        logger.info("Starting bot...")
-        # Start the bot client
+        logger.info("Radhika started...")
         RADHIKA.run()
-
-        # Keep the bot alive by calling idle()
         asyncio.run(RADHIKA.idle())
     except Exception as e:
         logger.error(f"Error running the bot: {e}")
