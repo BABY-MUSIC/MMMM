@@ -59,13 +59,26 @@ PLANS = {
     "500": "3 Days"
 }
 
-# /start command (फॉरवर्ड मैसेज के साथ)
+
 @RADHIKA.on_message(filters.command("start"))
 async def start(client, message: Message):
     logger.info("Received /start command")
     
+    # अगर /start call दिया गया है तो प्लान सेलेक्शन मेनू दिखाएं
+    if len(message.command) > 1 and message.command[1] == "call":
+        buttons = [
+            [InlineKeyboardButton(f"₹{price} for {duration}", callback_data=f"plan_{price}")]
+            for price, duration in PLANS.items()
+        ]
+        
+        await message.reply_text(
+            "Please choose your plan:",
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        return
+    
+    # वरना /start पर सिर्फ फॉरवर्ड मैसेज भेजे
     try:
-        # चैनल से मैसेज फॉरवर्ड करना
         await client.forward_messages(
             chat_id=message.chat.id,
             from_chat_id=CHANNEL_ID,
@@ -75,19 +88,6 @@ async def start(client, message: Message):
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         await message.reply_text("Something went wrong while forwarding the message.")
-
-# जब कोई यूजर "t.me/radhika/call" लिंक पर क्लिक करेगा
-@RADHIKA.on_message(filters.regex(r"(t\.me\/radhika\/call)"))
-async def call_handler(client, message: Message):
-    buttons = [
-        [InlineKeyboardButton(f"₹{price} for {duration}", callback_data=f"plan_{price}")]
-        for price, duration in PLANS.items()
-    ]
-    
-    await message.reply_text(
-        "Please choose your plan:",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
 
 # प्लान सेलेक्ट करने पर प्रोसेसिंग और इमेज भेजना
 @RADHIKA.on_callback_query(filters.regex(r"^plan_\d+$"))
