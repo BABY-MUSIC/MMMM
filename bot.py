@@ -5,29 +5,27 @@ import logging
 import os
 from pyrogram.enums import ChatAction
 from pyrogram import Client, filters
-from pyrogram.types import Message
 from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from flask import Flask
 from threading import Thread
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.types import (
+    ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup,
+    InlineKeyboardButton, Message, CallbackQuery
+)
 
 
-# Set up logging to track errors and bot activity
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# MongoDB setup (using motor for async access)
 MONGO_URL = "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority"
 mongo_client = AsyncIOMotorClient(MONGO_URL)
-word_db = mongo_client["Word"]["WordDb"]  # Collection for word-response pairs
+word_db = mongo_client["Word"]["WordDb"]
 
-# Bot configuration
-API_ID = "16457832"  # Replace with your API ID
-API_HASH = "3030874d0befdb5d05597deacc3e83ab"  # Replace with your API Hash
-BOT_TOKEN = "7645090253:AAFPA_HC1oTDWt9z4sRWcfP6BU_IeaY3-Z0"  # Replace with your Bot Token
+API_ID = "16457832"
+API_HASH = "3030874d0befdb5d05597deacc3e83ab"
+BOT_TOKEN = "7645090253:AAFPA_HC1oTDWt9z4sRWcfP6BU_IeaY3-Z0"
 
-# Initialize bot client
 RADHIKA = Client(
     "my_bot", 
     api_id=API_ID, 
@@ -35,25 +33,13 @@ RADHIKA = Client(
     bot_token=BOT_TOKEN
 )
 
-# Regular expression to filter unwanted messages
 UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
+CHANNEL_ID = "RadhikaCommunity"
+MESSAGE_ID = 2354
+OWNER_ID = 6657539971
 
-# Channel ID or message link to forward from
-CHANNEL_ID = "RadhikaCommunity"  # Channel username (without '@')
-MESSAGE_ID = 2354  # Message ID to forward
+user_responses = {}
 
-# /start command to forward a specific message from the channel
-# Define the owner's Telegram user ID
-OWNER_ID = 6657539971  # Replace with the actual owner ID
-
-@RADHIKA.on_message(filters.command(["clone"], prefixes="/") | filters.regex(r"(?i)\bclone\b"))
-async def handle_clone(client, message):
-    await message.reply(
-        "Currently unavailable. Contact Support chat [here](https://t.me/+HiS0W_Zz2XJhNjZl)",
-        disable_web_page_preview=True
-    )
-
-# प्लान बटन बनाने के लिए
 PLANS = {
     "50": "1 Hour",
     "100": "6 Hours",
@@ -61,19 +47,12 @@ PLANS = {
     "500": "3 Days"
 }
 
-
-import asyncio
-import logging
-import re
-from pyrogram import Client, filters
-from pyrogram.types import (
-    ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup,
-    InlineKeyboardButton, Message, CallbackQuery
-)
-
-
-
-user_responses = {}
+@RADHIKA.on_message(filters.command(["clone"], prefixes="/") | filters.regex(r"(?i)\bclone\b"))
+async def handle_clone(client, message):
+    await message.reply(
+        "Currently unavailable. Contact Support chat [here](https://t.me/+HiS0W_Zz2XJhNjZl)",
+        disable_web_page_preview=True
+    )
 
 @RADHIKA.on_message(filters.command("start") & filters.private)
 async def start_handler(client: Client, message: Message):
@@ -111,7 +90,7 @@ async def start_handler(client: Client, message: Message):
                         await client.send_photo(
                             chat_id=message.chat.id,
                             photo=image_path,
-                            caption=f"**✅ Plan Selected: ₹{price} for {PLANS[price]}**",
+                            caption=f"**Pay : ₹{price} and select Check for Call 🫦**",
                             reply_markup=InlineKeyboardMarkup(
                                 [[InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")]]
                             )
@@ -151,10 +130,6 @@ async def capture_user_response(client: Client, message: Message):
 @RADHIKA.on_callback_query(filters.regex(r"^check_\d+$"))
 async def check_plan(client: Client, query: CallbackQuery):
     await query.answer("Thanks for choosing the plan!", show_alert=True)
-
-
-
-
 
 
 # Combined responder for both group and private chats
