@@ -38,7 +38,7 @@ UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
 
 # Channel ID or message link to forward from
 CHANNEL_ID = "RadhikaCommunity"  # Channel username (without '@')
-MESSAGE_ID = 2352  # Message ID to forward
+MESSAGE_ID = 2354  # Message ID to forward
 
 # /start command to forward a specific message from the channel
 # Define the owner's Telegram user ID
