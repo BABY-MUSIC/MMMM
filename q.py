@@ -8,7 +8,7 @@ import googleapiclient.discovery
 BOT_TOKEN = "8052771146:AAEZGJamIo3pfcNe_q3WpTOIYHRFEL8Jpp8"
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY"
+YOUTUBE_API_KEY = "AIzaSyCHtdbQGgmq0NiYlHVS0Gr4NqNHlyjouKw"
 
 # 🔹 Pyrogram Client
 bot = Client("music_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
