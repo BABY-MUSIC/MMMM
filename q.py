@@ -1,93 +1,89 @@
 import os
-import requests
 import yt_dlp
+import requests
+from flask import Flask, request, jsonify, send_file
+from threading import Thread
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import googleapiclient.discovery
 
-# 🔹 Bot Credentials
+# 🔹 Telegram Bot Credentials
 BOT_TOKEN = "8052771146:AAEZGJamIo3pfcNe_q3WpTOIYHRFEL8Jpp8"
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-YOUTUBE_API_KEY = "AIzaSyDv7VX5N_BTBHksa3QI4LFuWXE_AZH-eT4"
 
-# 🔹 Pyrogram Client
-bot = Client("music_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+# 🔹 Flask API Setup
+app = Flask(__name__)
+DOWNLOAD_FOLDER = "downloads"
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# 🔹 YouTube से टॉप 10 गाने खोजना
+# 🔹 YouTube Search Function
+def youtube_search(query):
+    ydl_opts = {"quiet": True, "default_search": "ytsearch10", "extract_flat": True}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        result = ydl.extract_info(query, download=False)
+        return result.get("entries", [])
 
-def search_youtube(query):
-    youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
-    request = youtube.search().list(q=query, part="snippet", type="video", maxResults=10)
-    response = request.execute()
-    
-    results = []
-    for video in response.get("items", []):
-        title = video["snippet"]["title"]
-        video_id = video["id"]["videoId"]
-        results.append((title, video_id))
-    
-    return results
+# 🔹 MP3 Download Function
+@app.route('/download', methods=['GET'])
+def download_audio():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
 
-# 🔹 Invidious API से MP3 लिंक पाना
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': f'{DOWNLOAD_FOLDER}/%(title)s.%(ext)s',
+        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
+    }
 
-def get_direct_mp3_link(video_id):
-    try:
-        url = f"https://api.invidious.io/api/v1/videos/{video_id}"
-        response = requests.get(url).json()
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        filename = ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
 
-        if "adaptiveFormats" in response:
-            for fmt in response["adaptiveFormats"]:
-                if "audio" in fmt["type"]:
-                    return fmt["url"]
-    except Exception as e:
-        print(f"⚠️ Error: {e}")
-    
-    return None
+    return jsonify({"file_path": filename})
 
-# 🔹 डाउनलोड और भेजने का प्रोसेस
-def download_audio(video_id):
-    mp3_link = get_direct_mp3_link(video_id)
-    if not mp3_link:
-        return None
+@app.route('/file/<filename>', methods=['GET'])
+def get_file(filename):
+    return send_file(f"{DOWNLOAD_FOLDER}/{filename}", as_attachment=True)
 
-    file_name = f"{video_id}.mp3"
-    response = requests.get(mp3_link, stream=True)
+# 🔹 Run Flask API in a Thread
+def run_flask():
+    app.run(host="0.0.0.0", port=5000, debug=False)
 
-    with open(file_name, "wb") as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-    
-    return file_name
+Thread(target=run_flask).start()
 
-# 🔹 /song कमांड पर टॉप 10 गाने दिखाना
-@bot.on_message(filters.command("song"))
-def song_search(client, message):
-    query = message.text.replace("/song ", "")
-    results = search_youtube(query)
-    
-    if not results:
-        message.reply_text("❌ कोई गाना नहीं मिला!")
+# 🔹 Start Telegram Bot
+bot = Client("ytmp3_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+@bot.on_message(filters.command("song") & filters.private)
+async def search_song(_, message):
+    if len(message.command) < 2:
+        await message.reply("🎵 कृपया गाने का नाम भेजें।\nउदाहरण: `/song Tum Hi Ho`")
         return
-    
-    keyboard = [[InlineKeyboardButton(title, callback_data=video_id)] for title, video_id in results]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    message.reply_text("🎵 नीचे से कोई गाना चुनें:", reply_markup=reply_markup)
 
-# 🔹 जब कोई गाना चुने तो डाउनलोड और भेजें
-@bot.on_callback_query()
-def song_download(client, callback_query):
-    video_id = callback_query.data
-    callback_query.message.edit_text("📥 डाउनलोड हो रहा है...")
-    
-    file_path = download_audio(video_id)
-    if file_path:
-        callback_query.message.reply_audio(file_path, title="Downloaded Song")
-        os.remove(file_path)
+    query = " ".join(message.command[1:])
+    results = youtube_search(query)
+
+    if not results:
+        await message.reply("❌ कोई गाना नहीं मिला!")
+        return
+
+    buttons = [[InlineKeyboardButton(f"{idx+1}. {result['title']}", callback_data=f"download_{result['url']}")] for idx, result in enumerate(results[:10])]
+
+    await message.reply("🎶 **चुनें कोई गाना:**", reply_markup=InlineKeyboardMarkup(buttons))
+
+@bot.on_callback_query(filters.regex(r"^download_(.+)"))
+async def download_selected_song(_, query):
+    url = query.data.split("_")[1]
+
+    await query.message.edit("⏳ गाना डाउनलोड हो रहा है...")
+
+    response = requests.get(f"http://127.0.0.1:5000/download", params={"url": url}).json()
+
+    if "file_path" in response:
+        filename = response["file_path"]
+        await query.message.reply_audio(audio=filename, caption="🎵 आपका गाना!")
     else:
-        callback_query.message.edit_text("❌ डाउनलोड लिंक नहीं मिला!")
+        await query.message.edit("⚠ कोई समस्या हुई, कृपया पुनः प्रयास करें।")
 
-# 🔹 बॉट रन करें
 bot.run()
