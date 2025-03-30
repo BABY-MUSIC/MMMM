@@ -1,7 +1,7 @@
 import requests
 import time
 
-TOKEN = "7252944407:AAGOWJeR_eWFQfY2hRrgDhJJ-POOZsqA6Go"
+TOKEN = "7252944407:AAGHUFomCEbVpLUBYUM9k3hg2rlJLBPrvFA"
 URL = f"https://api.telegram.org/bot{TOKEN}/getMe"
 
 while True:
