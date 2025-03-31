@@ -7,8 +7,8 @@ from pyrogram.enums import ChatAction
 from pyrogram import Client, filters
 from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
-from flask import Flask
-from threading import Thread
+#from flask import Flask
+#from threading import Thread
 from pyrogram.types import (
     ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup,
     InlineKeyboardButton, Message, CallbackQuery
@@ -180,20 +180,7 @@ async def chatbot_handler(client, message: Message):
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Flask app is running!"
-
-def run_flask():
-    port = int(os.environ.get("PORT", 8000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-
 if __name__ == "__main__":
-    flask_thread = Thread(target=run_flask)
-    flask_thread.start()
-
     try:
         logger.info("Radhika started...")
         RADHIKA.run()
