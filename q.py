@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-BOT_TOKEN = "8048009371:AAF6CYASYj8Z0vEKxUmL6PYoIFVMC6m0OUk"
+BOT_TOKEN = "7242058454:AAE6TakbWWxpS6Xiq-XLXpWPZew9wzxNAu8"
 
 RADHIKA = Client(
     "my_bot", 
