@@ -37,7 +37,7 @@ UNWANTED_MESSAGE_REGEX = r"^[\W_]+$|[\/!?\~\\]"
 CHANNEL_ID = "RadhikaCommunity"
 MESSAGE_ID = 2357
 OWNER_ID = 6657539971
-SUPPORT_URL = "https://t.me/+HiS0W_Zz2XJhNjZl"
+SUPPORT_URL = "https://t.me/+gF7M1_0PC803ZjU9"
 
 user_responses = {}
 
