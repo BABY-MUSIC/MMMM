@@ -1,89 +1,52 @@
+import asyncio
+import logging
 import os
-import yt_dlp
-import requests
-from flask import Flask, request, jsonify, send_file
-from threading import Thread
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 
-# 🔹 Telegram Bot Credentials
-BOT_TOKEN = "8052771146:AAEZGJamIo3pfcNe_q3WpTOIYHRFEL8Jpp8"
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
+BOT_TOKEN = "8048009371:AAF6CYASYj8Z0vEKxUmL6PYoIFVMC6m0OUk"
 
-# 🔹 Flask API Setup
-app = Flask(__name__)
-DOWNLOAD_FOLDER = "downloads"
-os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+RADHIKA = Client(
+    "my_bot", 
+    api_id=API_ID, 
+    api_hash=API_HASH, 
+    bot_token=BOT_TOKEN
+)
 
-# 🔹 YouTube Search Function
-def youtube_search(query):
-    ydl_opts = {"quiet": True, "default_search": "ytsearch10", "extract_flat": True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        result = ydl.extract_info(query, download=False)
-        return result.get("entries", [])
+CHANNEL_ID = "yudffja"
+MESSAGE_ID = 3
+OWNER_ID = 6657539971
 
-# 🔹 MP3 Download Function
-@app.route('/download', methods=['GET'])
-def download_audio():
-    url = request.args.get('url')
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
+@RADHIKA.on_message(filters.command("start") & filters.private)
+async def start_handler(client: Client, message: Message):
+    # ✅ Owner को Notify करना
+    user_mention = message.from_user.mention
+    user_id = message.from_user.id
+    
+    notify_text = f"👤 **New User Started Bot**\n\n🔹 **User:** {user_mention} (`{user_id}`)\n🔹 **Chat ID:** `{message.chat.id}`"
+    
+    try:
+        await client.send_message(OWNER_ID, notify_text)
+    except Exception as e:
+        logger.error(f"Failed to notify owner: {e}")
+    
+    try:
+        await client.forward_messages(
+            chat_id=message.chat.id,
+            from_chat_id=CHANNEL_ID,
+            message_ids=MESSAGE_ID
+        )
+    except Exception as e:
+        await message.reply_text("Something went wrong while forwarding the message.")
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': f'{DOWNLOAD_FOLDER}/%(title)s.%(ext)s',
-        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
-
-    return jsonify({"file_path": filename})
-
-@app.route('/file/<filename>', methods=['GET'])
-def get_file(filename):
-    return send_file(f"{DOWNLOAD_FOLDER}/{filename}", as_attachment=True)
-
-# 🔹 Run Flask API in a Thread
-def run_flask():
-    app.run(host="0.0.0.0", port=5000, debug=False)
-
-Thread(target=run_flask).start()
-
-# 🔹 Start Telegram Bot
-bot = Client("ytmp3_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-
-@bot.on_message(filters.command("song") & filters.private)
-async def search_song(_, message):
-    if len(message.command) < 2:
-        await message.reply("🎵 कृपया गाने का नाम भेजें।\nउदाहरण: `/song Tum Hi Ho`")
-        return
-
-    query = " ".join(message.command[1:])
-    results = youtube_search(query)
-
-    if not results:
-        await message.reply("❌ कोई गाना नहीं मिला!")
-        return
-
-    buttons = [[InlineKeyboardButton(f"{idx+1}. {result['title']}", callback_data=f"download_{result['url']}")] for idx, result in enumerate(results[:10])]
-
-    await message.reply("🎶 **चुनें कोई गाना:**", reply_markup=InlineKeyboardMarkup(buttons))
-
-@bot.on_callback_query(filters.regex(r"^download_(.+)"))
-async def download_selected_song(_, query):
-    url = query.data.split("_")[1]
-
-    await query.message.edit("⏳ गाना डाउनलोड हो रहा है...")
-
-    response = requests.get(f"http://127.0.0.1:5000/download", params={"url": url}).json()
-
-    if "file_path" in response:
-        filename = response["file_path"]
-        await query.message.reply_audio(audio=filename, caption="🎵 आपका गाना!")
-    else:
-        await query.message.edit("⚠ कोई समस्या हुई, कृपया पुनः प्रयास करें।")
-
-bot.run()
+if __name__ == "__main__":
+    try:
+        logger.info("Radhika started...")
+        RADHIKA.run()
+    except Exception as e:
+        logger.error(f"Error running the bot: {e}")
