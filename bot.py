@@ -24,7 +24,7 @@ word_db = mongo_client["Word"]["WordDb"]
 
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-BOT_TOKEN = "7645090253:AAFPA_HC1oTDWt9z4sRWcfP6BU_IeaY3-Z0"
+BOT_TOKEN = "7581171239:AAG99QESgSiKQuV2vizw4wHF1WypJjoN5Ik"
 
 RADHIKA = Client(
     "my_bot", 
