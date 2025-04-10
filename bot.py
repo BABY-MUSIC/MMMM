@@ -70,7 +70,7 @@ async def start_handler(client: Client, message: Message):
 
     notify_text = (
         f"👤 **New User Started Bot**\n\n"
-        f"🔹 **User:** {user_mention} (`{user_id}`)\n"
+        f"🔹 **User:** {user_mention}\n"
         f"🔹 **Chat ID:** `{chat_id}`\n"
         f"🔹 **Total Users:** `{total_users}`"
     )
@@ -108,7 +108,7 @@ async def start_handler(client: Client, message: Message):
                         await client.send_photo(
                             chat_id=chat_id,
                             photo=image_path,
-                            caption = f"__Pay : ₹{price} and select Check for Call 🫦__",
+                            caption = f"__Pay : ₹{price} and select Check for Call 🫦__\n__Need Any Support Email:- `RadhikaPaymentSupport@gmail.com`__",
                             reply_markup=InlineKeyboardMarkup([
                                 [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
                                 [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
@@ -190,7 +190,7 @@ async def chatbot_handler(client, message: Message):
                             await client.send_photo(
                                 chat_id=chat_id,
                                 photo=image_path,
-                                caption=f"**Pay : ₹{price} and select Check for Call 🫦**",
+                                caption = f"__Pay : ₹{price} and select Check for Call 🫦__\n__Need Any Support Email:- `RadhikaPaymentSupport@gmail.com`__",
                                 reply_markup=InlineKeyboardMarkup([
                                     [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
                                     [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
