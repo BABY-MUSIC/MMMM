@@ -165,7 +165,7 @@ async def chatbot_handler(client, message: Message):
             buttons = [[f"₹{price} for {duration}"] for price, duration in PLANS.items()]
             
             sent_msg = await message.reply_text(
-                "💬 **Do you want to make a call? Choose a plan below:**",
+                "Audio & Video Call karne ke aapko hamara plans buy karna padega 💦💦\n Full Open call 18+ 💋𓀐",
                 reply_markup=ReplyKeyboardMarkup(buttons, one_time_keyboard=True, resize_keyboard=True)
             )
 
