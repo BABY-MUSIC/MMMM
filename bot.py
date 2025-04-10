@@ -108,7 +108,7 @@ async def start_handler(client: Client, message: Message):
                         await client.send_photo(
                             chat_id=chat_id,
                             photo=image_path,
-                            caption = f"_Pay : ₹{price} and select Check for Call 🫦_",
+                            caption = f"__Pay : ₹{price} and select Check for Call 🫦__",
                             reply_markup=InlineKeyboardMarkup([
                                 [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
                                 [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
