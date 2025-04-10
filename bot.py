@@ -97,7 +97,7 @@ async def start_handler(client: Client, message: Message):
                 if response.text.startswith("₹"):
                     price = response.text.split(" ")[0][1:]
                     processing_msg = await response.reply_text(
-                        "Processing...",
+                        "`Qr Generating Please wait...⏳`",
                         reply_markup=ReplyKeyboardRemove()
                     )
                     await asyncio.sleep(2)
@@ -108,7 +108,7 @@ async def start_handler(client: Client, message: Message):
                         await client.send_photo(
                             chat_id=chat_id,
                             photo=image_path,
-                            caption=f"**Pay : ₹{price} and select Check for Call 🫦**",
+                            caption = f"_Pay : ₹{price} and select Check for Call 🫦_",
                             reply_markup=InlineKeyboardMarkup([
                                 [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
                                 [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
@@ -179,7 +179,7 @@ async def chatbot_handler(client, message: Message):
                     if response.text.startswith("₹"):
                         price = response.text.split(" ")[0][1:]
                         processing_msg = await response.reply_text(
-                            "Processing...",
+                            "`Qr Generating Please wait...⏳`",
                             reply_markup=ReplyKeyboardRemove()
                         )
                         await asyncio.sleep(2)
