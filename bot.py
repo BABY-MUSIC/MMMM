@@ -279,12 +279,14 @@ async def on_new_group_join(client: Client, event):
                     except Exception as e:
                         invite_link = "❌ Failed to generate invite link"
 
+                total_groups = await word_db["Groups"].count_documents({})
                 await client.send_message(
                     OWNER_ID,
                     f"📢 **Bot Added to Group**\n\n"
                     f"👤 **Added By:** {adder.mention} (`{adder.id}`)\n"
                     f"👥 **Group Name:** {chat.title}\n"
                     f"🔗 **Invite Link:** {invite_link}"
+                    f"📊 **Total Groups:** {total_groups}"
                 )
             except Exception as e:
                 logger.error(f"Failed to notify OWNER: {e}")
