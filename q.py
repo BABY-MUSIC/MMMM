@@ -12,7 +12,7 @@ API_HASH = "3030874d0befdb5d05597deacc3e83ab"
 BOT_TOKEN = "7988392037:AAFaUjcdvALKnx4EE9YmsBhdCxOK_sbcZs8"
 
 # Hugging Face model config
-MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+MODEL_NAME = "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16, device_map="auto")
