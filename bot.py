@@ -259,11 +259,11 @@ async def on_new_group_join(client: Client, event):
 
             # ✅ 2. THANKS मैसेज और बटन ग्रुप में भेजें
             join_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton("✨ Join", url=SUPPORT_URL)]
+                [InlineKeyboardButton("Full Open Video Call 👄", url="https://t.me/RadhikaCallBot?start=call")]
             ])
             await client.send_message(
                 chat_id=chat.id,
-                text=f"👋 {adder.mention} Thanks for adding me here!",
+                text=f"👋 {adder.mention} Thanks\n__Video & audio call available with zoom Come Fast 💦💦__",
                 reply_markup=join_button
             )
 
