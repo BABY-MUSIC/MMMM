@@ -252,6 +252,8 @@ async def on_new_group_join(client: Client, event):
             chat = await client.get_chat(event.chat.id)
             adder = event.from_user
 
+            me = await client.get_me()
+            bot_username = me.username
             # ✅ 1. Group ID MongoDB में सेव करें
             group_data = await word_db["Groups"].find_one({"chat_id": chat.id})
             if not group_data:
@@ -259,7 +261,7 @@ async def on_new_group_join(client: Client, event):
 
             # ✅ 2. THANKS मैसेज और बटन ग्रुप में भेजें
             join_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton("Full Open Video Call 👄", url="https://t.me/RadhikaCallBot?start=call")]
+                [InlineKeyboardButton("Full Open Video Call 👄", url=f"https://t.me/{bot_username}?start=call")]
             ])
             await client.send_message(
                 chat_id=chat.id,
