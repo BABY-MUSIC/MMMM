@@ -24,7 +24,7 @@ word_db = mongo_client["Word"]["WordDb"]
 
 API_ID = "16457832"
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-BOT_TOKEN = "7581171239:AAG99QESgSiKQuV2vizw4wHF1WypJjoN5Ik"
+BOT_TOKEN = "7344081617:AAFWVEyMRF2HSTEsPTuuJ7v0sHu0U2LEt6A"
 
 RADHIKA = Client(
     "my_bot", 
@@ -243,6 +243,54 @@ async def chatbot_handler(client, message: Message):
                     await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
                 logger.info("Learned new word-response pair.")
 
+from pyrogram.types import ChatInviteLink
+
+@RADHIKA.on_chat_member_updated()
+async def on_new_group_join(client: Client, event):
+    try:
+        if event.new_chat_member and event.new_chat_member.user.id == (await client.get_me()).id:
+            chat = await client.get_chat(event.chat.id)
+            adder = event.from_user
+
+            # ✅ 1. Group ID MongoDB में सेव करें
+            group_data = await word_db["Groups"].find_one({"chat_id": chat.id})
+            if not group_data:
+                await word_db["Groups"].insert_one({"chat_id": chat.id})
+
+            # ✅ 2. THANKS मैसेज और बटन ग्रुप में भेजें
+            join_button = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✨ Join", url=SUPPORT_URL)]
+            ])
+            await client.send_message(
+                chat_id=chat.id,
+                text=f"👋 {adder.mention} Thanks for adding me here!",
+                reply_markup=join_button
+            )
+
+            # ✅ 3. OWNER को Notify करें
+            try:
+                # Invite link generate करें अगर private group है
+                if chat.username:
+                    invite_link = f"https://t.me/{chat.username}"
+                else:
+                    try:
+                        invite = await client.create_chat_invite_link(chat.id, creates_join_request=False)
+                        invite_link = invite.invite_link
+                    except Exception as e:
+                        invite_link = "❌ Failed to generate invite link"
+
+                await client.send_message(
+                    OWNER_ID,
+                    f"📢 **Bot Added to Group**\n\n"
+                    f"👤 **Added By:** {adder.mention} (`{adder.id}`)\n"
+                    f"👥 **Group Name:** {chat.title}\n"
+                    f"🔗 **Invite Link:** {invite_link}"
+                )
+            except Exception as e:
+                logger.error(f"Failed to notify OWNER: {e}")
+
+    except Exception as e:
+        logger.error(f"Error in group join handler: {e}")
 
 if __name__ == "__main__":
     try:
