@@ -1,52 +1,51 @@
-import asyncio
 import logging
-import os
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from pyrogram import Client, filters
-from pyrogram.types import Message
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+# Logging
+logging.basicConfig(level=logging.INFO)
 
-API_ID = "16457832"
+# Telegram Bot Config
+API_ID = 16457832  # अपने वाले डाल
 API_HASH = "3030874d0befdb5d05597deacc3e83ab"
-BOT_TOKEN = "7242058454:AAE6TakbWWxpS6Xiq-XLXpWPZew9wzxNAu8"
+BOT_TOKEN = "7988392037:AAFaUjcdvALKnx4EE9YmsBhdCxOK_sbcZs8"
 
-RADHIKA = Client(
-    "my_bot", 
-    api_id=API_ID, 
-    api_hash=API_HASH, 
-    bot_token=BOT_TOKEN
+# Hugging Face model config
+MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float16, device_map="auto")
+
+SYSTEM_PROMPT = (
+    "तुम एक इंसान जैसे बात करने वाले chatbot हो। जवाब बहुत छोटे, सीधे और casual होने चाहिए — "
+    "जैसे कोई दोस्त WhatsApp पर बात कर रहा हो। हर सवाल का जवाब बहुत natural और friendly tone में दो। "
+    "कोई लंबा explanation नहीं देना है। जवाब में कभी-कभी emoji भी use कर सकते हो।"
 )
 
-CHANNEL_ID = "yudffja"
-MESSAGE_ID = 3
-OWNER_ID = 6657539971
+# Telegram Bot Setup
+app = Client("babybot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-@RADHIKA.on_message(filters.command("start") & filters.private)
-async def start_handler(client: Client, message: Message):
-    # ✅ Owner को Notify करना
-    user_mention = message.from_user.mention
-    user_id = message.from_user.id
-    
-    notify_text = f"👤 **New User Started Bot**\n\n🔹 **User:** {user_mention} (`{user_id}`)\n🔹 **Chat ID:** `{message.chat.id}`"
-    
-    try:
-        await client.send_message(OWNER_ID, notify_text)
-    except Exception as e:
-        logger.error(f"Failed to notify owner: {e}")
-    
-    try:
-        await client.forward_messages(
-            chat_id=message.chat.id,
-            from_chat_id=CHANNEL_ID,
-            message_ids=MESSAGE_ID
-        )
-    except Exception as e:
-        await message.reply_text("Something went wrong while forwarding the message.")
+# Start Message
+@app.on_message(filters.command("start"))
+async def start(client, message):
+    await message.reply_text("हाय! मैं तेरा बेबी-बॉट हूँ, बोलो क्या हाल है?")
 
+# Chat Handler
+@app.on_message(filters.text & ~filters.command(""))
+async def reply(client, message):
+    user_msg = message.text
+
+    prompt = f"{SYSTEM_PROMPT}\nUser: {user_msg}\nBot:"
+
+    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    output = model.generate(**inputs, max_new_tokens=150, do_sample=True, temperature=0.7)
+    reply_text = tokenizer.decode(output[0], skip_special_tokens=True)
+    reply_text = reply_text.split("Bot:")[-1].strip()
+
+    await message.reply_text(reply_text)
+
+# Run
 if __name__ == "__main__":
-    try:
-        logger.info("Radhika started...")
-        RADHIKA.run()
-    except Exception as e:
-        logger.error(f"Error running the bot: {e}")
+    print("🤖 BabyBot is running...")
+    app.run()
