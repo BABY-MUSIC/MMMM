@@ -4,3 +4,4 @@ pymongo
 asyncio
 tgcrypto
 flask
+requests
