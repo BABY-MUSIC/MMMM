@@ -385,13 +385,15 @@ import requests
 import time
 import os
 
+# Define Telegram client
+
+
+# Flask app
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Flask app is running on port 8000!"
-
-
 
 # Ping loop
 def ping():
@@ -408,21 +410,21 @@ def run_flask():
     print("[FLASK] Starting Flask server on port 8000...")
     app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-# Telegram client in async thread
+# Telegram bot run logic
 def run_radhika():
     print("[RADHIKA] Starting Telegram client...")
 
     async def start_bot():
         await RADHIKA.start()
         print("[RADHIKA] Client started.")
-        await asyncio.Event().wait()  # Blocks forever like run()
+        await RADHIKA.idle()  # Keeps bot running
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(start_bot())
 
-# Threads
+# Start all threads
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     threading.Thread(target=ping, daemon=True).start()
-    run_radhika()  # Blocking thread — ठीक वैसे ही जैसे तुम expect कर रहे थे
+    run_radhika()  # This blocks, keeps bot alive
