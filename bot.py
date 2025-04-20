@@ -38,7 +38,7 @@ CHANNEL_ID = "RadhikaCommunity"
 MESSAGE_ID = 2357
 OWNER_ID = 6657539971
 SUPPORT_URL = "https://t.me/+gF7M1_0PC803ZjU9"
-
+IS_BROADCASTING = False
 user_responses = {}
 
 PLANS = {
@@ -378,22 +378,40 @@ async def broadcast_handler(client: Client, message: Message):
     IS_BROADCASTING = False
 
 from flask import Flask
-from threading import Thread
+import threading
+import time
+import requests
 
 app = Flask(__name__)
 
+# Flask route
 @app.route('/')
 def home():
-    return "Radhika Pyrogram Bot is running!"
+    return "Flask app is running on port 8000!"
 
+# Function to ping every 5 minutes to keep the app alive
+def ping():
+    while True:
+        try:
+            # Ping request to a URL to prevent the app from going to sleep
+            # Replace with your target URL or app URL to keep the connection active
+            requests.get('http://localhost:8000')
+            print("Ping sent to keep the app awake.")
+        except requests.exceptions.RequestException as e:
+            print(f"Error pinging: {e}")
+        
+        # Wait for 5 minutes before sending another ping
+        time.sleep(300)  # 300 seconds = 5 minutes
+
+# Function to start the Flask app
 def run_flask():
-    app.run(host="0.0.0.0", port=8000)
-
-def run_bot():
-    RADHIKA.run()
+    app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
 
 if __name__ == "__main__":
-    flask_thread = Thread(target=run_flask)
+    # Start the Flask app in a separate thread
+    flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
 
-    run_bot()
+    # Start the ping function in a separate thread
+    ping_thread = threading.Thread(target=ping)
+    ping_thread.start()
