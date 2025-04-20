@@ -395,7 +395,7 @@ def ping():
         try:
             # Ping request to a URL to prevent the app from going to sleep
             # Replace with your target URL or app URL to keep the connection active
-            requests.get('http://localhost:8000')
+            requests.get('structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
             print("Ping sent to keep the app awake.")
         except requests.exceptions.RequestException as e:
             print(f"Error pinging: {e}")
