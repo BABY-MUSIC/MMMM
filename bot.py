@@ -377,21 +377,21 @@ async def broadcast_handler(client: Client, message: Message):
     await message.reply(f"📢 Broadcast complete.\n✅ Groups: {total_sent}\n📌 Pinned: {total_pinned}")
     IS_BROADCASTING = False
 
-from flask import Flask
-from pyrogram import Client
-import threading
-import time
-import requests
 import asyncio
+from pyrogram import Client
+from flask import Flask
+import threading
+import requests
+import time
+import os
 
-# Flask app
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Flask app is running on port 8000!"
 
-# Telegram client initialization
+
 
 # Ping loop
 def ping():
@@ -408,17 +408,21 @@ def run_flask():
     print("[FLASK] Starting Flask server on port 8000...")
     app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-# Telegram bot thread with event loop
+# Telegram client in async thread
 def run_radhika():
     print("[RADHIKA] Starting Telegram client...")
+
+    async def start_bot():
+        await RADHIKA.start()
+        print("[RADHIKA] Client started.")
+        await asyncio.Event().wait()  # Blocks forever like run()
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(RADHIKA.start())
-    print("[RADHIKA] Client is running. Blocking thread...")
-    loop.run_forever()
+    loop.run_until_complete(start_bot())
 
-# Main entry
+# Threads
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     threading.Thread(target=ping, daemon=True).start()
-    run_radhika()  # Blocking main thread (no need to use threading here)
+    run_radhika()  # Blocking thread — ठीक वैसे ही जैसे तुम expect कर रहे थे
