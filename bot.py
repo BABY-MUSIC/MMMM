@@ -382,7 +382,7 @@ from pyrogram import Client
 import threading
 import time
 import requests
-import os
+import asyncio
 
 # Flask app
 app = Flask(__name__)
@@ -391,8 +391,9 @@ app = Flask(__name__)
 def home():
     return "Flask app is running on port 8000!"
 
+# Telegram client initialization
 
-# Ping loop to keep app awake
+# Ping loop
 def ping():
     while True:
         try:
@@ -400,20 +401,24 @@ def ping():
             print(f"[PING] Status: {response.status_code}")
         except requests.exceptions.RequestException as e:
             print(f"[PING ERROR] {e}")
-        time.sleep(300)  # every 5 minutes
+        time.sleep(300)
 
 # Flask thread
 def run_flask():
     print("[FLASK] Starting Flask server on port 8000...")
     app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-# Telegram bot thread
+# Telegram bot thread with event loop
 def run_radhika():
     print("[RADHIKA] Starting Telegram client...")
-    RADHIKA.run()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(RADHIKA.start())
+    print("[RADHIKA] Client is running. Blocking thread...")
+    loop.run_forever()
 
 # Main entry
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     threading.Thread(target=ping, daemon=True).start()
-    threading.Thread(target=run_radhika).start()  # Telegram client should block main thread
+    run_radhika()  # Blocking main thread (no need to use threading here)
