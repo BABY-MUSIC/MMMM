@@ -382,33 +382,38 @@ from pyrogram import Client
 import threading
 import time
 import requests
+import os
 
+# Flask app
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Flask app is running on port 8000!"
 
-# Ping loop
+
+# Ping loop to keep app awake
 def ping():
     while True:
         try:
-            requests.get('https://structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
-            print("Ping sent to keep the app awake.")
+            response = requests.get('https://structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
+            print(f"[PING] Status: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error pinging: {e}")
-        time.sleep(300)
+            print(f"[PING ERROR] {e}")
+        time.sleep(300)  # every 5 minutes
 
 # Flask thread
 def run_flask():
+    print("[FLASK] Starting Flask server on port 8000...")
     app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-# Telegram client thread
+# Telegram bot thread
 def run_radhika():
-    print("Starting Telegram client: radhika")
-    RADHIKA.run()  # Ye जरूरी है warna client कभी शुरू नहीं होगा
+    print("[RADHIKA] Starting Telegram client...")
+    RADHIKA.run()
 
+# Main entry
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
-    threading.Thread(target=ping).start()
-    threading.Thread(target=run_radhika).start()
+    threading.Thread(target=run_flask, daemon=True).start()
+    threading.Thread(target=ping, daemon=True).start()
+    threading.Thread(target=run_radhika).start()  # Telegram client should block main thread
