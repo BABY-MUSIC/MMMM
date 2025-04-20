@@ -378,40 +378,37 @@ async def broadcast_handler(client: Client, message: Message):
     IS_BROADCASTING = False
 
 from flask import Flask
+from pyrogram import Client
 import threading
 import time
 import requests
 
 app = Flask(__name__)
 
-# Flask route
 @app.route('/')
 def home():
     return "Flask app is running on port 8000!"
 
-# Function to ping every 5 minutes to keep the app alive
+# Ping loop
 def ping():
     while True:
         try:
-            # Ping request to a URL to prevent the app from going to sleep
-            # Replace with your target URL or app URL to keep the connection active
-            requests.get('structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
+            requests.get('https://structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
             print("Ping sent to keep the app awake.")
         except requests.exceptions.RequestException as e:
             print(f"Error pinging: {e}")
-        
-        # Wait for 5 minutes before sending another ping
-        time.sleep(300)  # 300 seconds = 5 minutes
+        time.sleep(300)
 
-# Function to start the Flask app
+# Flask thread
 def run_flask():
-    app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
+
+# Telegram client thread
+def run_radhika():
+    print("Starting Telegram client: radhika")
+    RADHIKA.run()  # Ye जरूरी है warna client कभी शुरू नहीं होगा
 
 if __name__ == "__main__":
-    # Start the Flask app in a separate thread
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.start()
-
-    # Start the ping function in a separate thread
-    ping_thread = threading.Thread(target=ping)
-    ping_thread.start()
+    threading.Thread(target=run_flask).start()
+    threading.Thread(target=ping).start()
+    threading.Thread(target=run_radhika).start()
