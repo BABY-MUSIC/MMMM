@@ -396,7 +396,7 @@ def run_flask():
 def keep_alive_ping():
     while True:
         try:
-            requests.get("structural-suzie-kumaridipali8233-63f25683.koyeb.app/")
+            requests.get("https://mmmm-2k74.onrender.com")
         except Exception as e:
             print(f"Ping failed: {e}")
         time.sleep(300)  # 5 minutes
