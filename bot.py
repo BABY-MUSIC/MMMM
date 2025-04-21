@@ -297,6 +297,14 @@ async def on_new_group_join(client: Client, event):
         logger.error(f"Error in group join handler: {e}")
 
 
+from pyrogram import Client, filters
+from pyrogram.errors import FloodWait
+from pyrogram.types import Message
+import asyncio
+
+IS_BROADCASTING = False
+
+
 @RADHIKA.on_message(filters.command("broadcast") & filters.user(6657539971))  # Replace with your OWNER ID
 async def broadcast_handler(client: Client, message: Message):
     global IS_BROADCASTING
