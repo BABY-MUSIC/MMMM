@@ -388,38 +388,21 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Flask app is running on port 8000!"
+    return "✅ I'm alive!"
 
-# Ping loop
-def ping():
+def run_flask():
+    app.run(host='0.0.0.0', port=8000)
+
+def keep_alive_ping():
     while True:
         try:
-            response = requests.get('https://structural-suzie-kumaridipali8233-63f25683.koyeb.app/')
-            print(f"[PING] Status: {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"[PING ERROR] {e}")
-        time.sleep(300)
+            requests.get("structural-suzie-kumaridipali8233-63f25683.koyeb.app/")
+        except Exception as e:
+            print(f"Ping failed: {e}")
+        time.sleep(300)  # 5 minutes
 
-# Flask thread
-def run_flask():
-    print("[FLASK] Starting Flask server on port 8000...")
-    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-# Telegram client in async thread
-def run_radhika():
-    print("[RADHIKA] Starting Telegram client...")
-
-    async def start_bot():
-        await RADHIKA.start()
-        print("[RADHIKA] Client started.")
-        await asyncio.Event().wait()  # Keeps bot running indefinitely
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_bot())
-
-# Threads
 if __name__ == "__main__":
-    threading.Thread(target=run_flask, daemon=True).start()
-    threading.Thread(target=ping, daemon=True).start()
-    run_radhika()  # Blocking thread — जैसा आप चाहते थे
+    threading.Thread(target=run_flask).start()
+    threading.Thread(target=keep_alive_ping).start()
+    RADHIKA.run()
