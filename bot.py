@@ -303,7 +303,7 @@ from pyrogram.types import Message
 import asyncio
 
 
-@RADHIKA.on_message(filters.command("broadcast") & filters.user(6657539971))  # Replace with your OWNER ID
+@RADHIKA.on_message(filters.command("broadcast", prefixes=["/", "!", "."]) & filters.user(6657539971))  # OWNER ID यहां दें
 async def broadcast_handler(client: Client, message: Message):
     global IS_BROADCASTING
     if IS_BROADCASTING:
