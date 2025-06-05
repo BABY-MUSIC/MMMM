@@ -302,14 +302,12 @@ from pyrogram.errors import FloodWait
 from pyrogram.types import Message
 import asyncio
 
-IS_BROADCASTING = False
-
 
 @RADHIKA.on_message(filters.command("broadcast") & filters.user(6657539971))  # Replace with your OWNER ID
 async def broadcast_handler(client: Client, message: Message):
     global IS_BROADCASTING
     if IS_BROADCASTING:
-        return await message.reply("⛔ Already Broadcasting!")
+        return await message.reply("⛔ पहले से ही Broadcasting चालू है!")
 
     if message.reply_to_message:
         x = message.reply_to_message.id
@@ -317,12 +315,11 @@ async def broadcast_handler(client: Client, message: Message):
         query = None
     else:
         if len(message.command) < 2:
-            return await message.reply("🔸 Please provide a message or reply to one.")
+            return await message.reply("🔸 कृपया कोई मैसेज दें या किसी मैसेज को reply करें।")
         query = message.text.split(None, 1)[1]
         x = None
         y = None
 
-    # Parse flags
     flags = {
         "pin": "-pin" in message.text,
         "pinloud": "-pinloud" in message.text,
@@ -330,17 +327,16 @@ async def broadcast_handler(client: Client, message: Message):
         "nobot": "-nobot" in message.text,
     }
 
-    # Clean flags from query
     for flag in ["-pin", "-pinloud", "-user", "-nobot"]:
         if query:
             query = query.replace(flag, "").strip()
 
-    await message.reply("✅ Broadcasting started...")
+    await message.reply("✅ Broadcasting शुरू हो गया है...")
     IS_BROADCASTING = True
-    total_sent = 0
-    total_pinned = 0
+    group_sent = 0
+    user_sent = 0
+    pinned = 0
 
-    # Broadcast to groups
     if not flags["nobot"]:
         chats_cursor = word_db["Groups"].find({})
         async for chat in chats_cursor:
@@ -350,24 +346,28 @@ async def broadcast_handler(client: Client, message: Message):
                 else:
                     msg = await client.send_message(chat["chat_id"], query)
 
-                if flags["pin"]:
-                    await msg.pin(disable_notification=True)
-                    total_pinned += 1
-                elif flags["pinloud"]:
-                    await msg.pin(disable_notification=False)
-                    total_pinned += 1
-
-                total_sent += 1
+                if msg:
+                    if flags["pin"]:
+                        try:
+                            await msg.pin(disable_notification=True)
+                            pinned += 1
+                        except:
+                            pass
+                    elif flags["pinloud"]:
+                        try:
+                            await msg.pin(disable_notification=False)
+                            pinned += 1
+                        except:
+                            pass
+                    group_sent += 1
                 await asyncio.sleep(0.3)
             except FloodWait as e:
                 await asyncio.sleep(e.value)
             except:
                 continue
 
-    # Broadcast to users
     if flags["user"]:
         user_cursor = word_db["Users"].find({})
-        user_sent = 0
         async for user in user_cursor:
             try:
                 if x and y:
@@ -380,10 +380,15 @@ async def broadcast_handler(client: Client, message: Message):
                 await asyncio.sleep(e.value)
             except:
                 continue
-        await message.reply(f"✅ Sent to {user_sent} users.")
 
-    await message.reply(f"📢 Broadcast complete.\n✅ Groups: {total_sent}\n📌 Pinned: {total_pinned}")
+    await message.reply(
+        f"📢 Broadcast समाप्त हुआ!\n"
+        f"👥 Groups भेजे गए: {group_sent}\n"
+        f"👤 Users भेजे गए: {user_sent}\n"
+        f"📌 Pinned messages: {pinned}"
+    )
     IS_BROADCASTING = False
+
 
 import asyncio
 from pyrogram import Client
