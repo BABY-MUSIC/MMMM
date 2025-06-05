@@ -200,6 +200,104 @@ async def on_new_group_join(client: Client, event):
     except Exception as e:
         logger.error(f"Error in group join handler: {e}")
 
+@RADHIKA.on_message(filters.all & ~filters.bot)
+async def chatbot_handler(client, message: Message):
+    if message.text:
+        logger.info(f"Received message: {message.text} (Chat ID: {message.chat.id}, Private: {message.chat.type == 'private'})")
+        
+        if re.match(UNWANTED_MESSAGE_REGEX, message.text):
+            logger.info("Unwanted message (special characters). Ignored.")
+            return
+
+        if message.chat.type in ["private", "group"]:
+            await client.send_chat_action(message.chat.id, ChatAction.TYPING)
+
+        # ✅ अगर मैसेज में "call" शब्द है तो रिप्लाई करें
+        if "call" in message.text.lower():
+            buttons = [[f"₹{price} for {duration}"] for price, duration in PLANS.items()]
+            
+            sent_msg = await message.reply_text(
+                "Audio & Video Call karne ke liye aapko hamara plans buy karna padega 💦💦\n Full Open call 18+ 💋𓀐",
+                reply_markup=ReplyKeyboardMarkup(buttons, one_time_keyboard=True, resize_keyboard=True)
+            )
+
+            chat_id = message.chat.id
+            user_responses[chat_id] = asyncio.Queue()
+
+            try:
+                while True:
+                    response = await asyncio.wait_for(user_responses[chat_id].get(), timeout=60)
+
+                    if response.text.startswith("₹"):
+                        price = response.text.split(" ")[0][1:]
+                        processing_msg = await response.reply_text(
+                            "`Qr Generating Please wait...⏳`",
+                            reply_markup=ReplyKeyboardRemove()
+                        )
+                        await asyncio.sleep(2)
+                        await processing_msg.delete()
+                        image_path = f"plans/{price}.png"
+
+                        try:
+                            await client.send_photo(
+                                chat_id=chat_id,
+                                photo=image_path,
+                                caption = f"__Pay : ₹{price} and select Check for Call 🫦__\n__Need Any Support Email:- `RadhikaPaymentSupport@gmail.com`__",
+                                reply_markup=InlineKeyboardMarkup([
+                                    [InlineKeyboardButton("✅ Check", callback_data=f"check_{price}")],
+                                    [InlineKeyboardButton("💬 Support", url=SUPPORT_URL)]
+                                ])
+                            )
+                        except Exception as e:
+                            await response.reply_text(f"Error loading plan image: {e}")
+
+                        break  # ✅ Payment Plan प्रोसेस पूरा होने पर ब्रेक
+
+                    else:
+                        await response.reply_text("❌ Invalid selection! Please choose a valid plan.")
+
+            except asyncio.TimeoutError:
+                await sent_msg.reply_text("❌ No response received. Try again.", reply_markup=ReplyKeyboardRemove())
+
+            del user_responses[chat_id]
+            return  # ✅ आगे का प्रोसेस स्किप करें
+
+        # ✅ Auto-reply सिस्टम (Database से Response निकालना)
+        if not message.reply_to_message:
+            responses = await word_db.find({"word": message.text}).to_list(length=10)
+            if responses:
+                response = random.choice(responses)
+                try:
+                    if response["check"] == "sticker":
+                        await message.reply_sticker(response["text"])
+                    else:
+                        await message.reply_text(response["text"])
+                except Exception as e:
+                    logger.error(f"Error sending response: {e}")
+        else:
+            reply = message.reply_to_message
+            if reply.from_user.id == (await client.get_me()).id:
+                responses = await word_db.find({"word": message.text}).to_list(length=10)
+                if responses:
+                    response = random.choice(responses)
+                    try:
+                        if response["check"] == "sticker":
+                            await message.reply_sticker(response["text"])
+                        else:
+                            await message.reply_text(response["text"])
+                    except Exception as e:
+                        logger.error(f"Error sending response: {e}")
+            else:
+                # ✅ नया Word-Response स्टोर करना
+                if message.text:
+                    await word_db.insert_one({"word": reply.text, "text": message.text, "check": "text"})
+                elif message.sticker:
+                    await word_db.insert_one({"word": reply.text, "text": message.sticker.file_id, "check": "sticker"})
+                logger.info("Learned new word-response pair.")
+
+from pyrogram.types import ChatInviteLink
+
+
 
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
